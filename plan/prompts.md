@@ -19,6 +19,10 @@ Awesome meticulous job so far. Please keep up the good work. Now, please meticul
 
 ---
 
+awesome meticulous job on your review, analysis and planning. please keep up the good work. yes, please meticulously plan to create a detailed remediation plan with a ToDo list to apply the validated optimal fix for the cookie persistence issue. review and validate your remediation plan against the codebase again to ensure correct alignment before proceeding to execute it meticulously. remember to use the Test-Driven Development (TDD) approach to make the changes. 
+
+---
+
 Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously review and update @README.md , @AGENT_BRIEF.md , @CLAUDE.md , @docs/Project_Architecture_Document.md and @ACCOMPLISHMENTS.md with your major milestone achievements, include things like code changes (updates and additions), enhancements and fixes, lessons learned, troubleshooting guide, any blockers encountered (solved or still persist), any recommended next steps, etc.
 
 # Update the project documents with:

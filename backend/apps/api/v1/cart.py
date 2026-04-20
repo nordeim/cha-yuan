@@ -4,13 +4,14 @@ Cart API Endpoints - Django Ninja
 RESTful API for cart operations following BFF pattern.
 """
 
-from typing import List, Optional
+from typing import List, Optional, Tuple
 from decimal import Decimal
 
 from django.contrib.auth.models import AnonymousUser
 from ninja import Router, Schema, Field
 from ninja.errors import HttpError
-from django.http import HttpRequest
+from django.http import HttpRequest, HttpResponse
+from django.conf import settings
 
 from apps.core.authentication import JWTAuth
 
@@ -134,10 +135,16 @@ def get_cart_response(cart_id: str) -> CartResponseSchema:
     )
 
 
-def get_cart_id_from_request(request: HttpRequest) -> str:
-    """Extract cart ID from request (cookies or auth)."""
+def get_cart_id_from_request(request: HttpRequest) -> Tuple[str, bool]:
+    """
+    Extract cart ID from request (cookies or auth).
+
+    Returns:
+        Tuple of (cart_id, is_new) where is_new indicates if a new cart_id was generated
+    """
     # Try to get from cookies first
     cart_id = request.COOKIES.get("cart_id")
+    is_new = False
 
     # Check if actually authenticated (not AnonymousUser)
     # AnonymousUser is truthy but should not be treated as authenticated
@@ -147,16 +154,46 @@ def get_cart_id_from_request(request: HttpRequest) -> str:
         # Use user ID from authenticated user (id, not user_id)
         user_id = getattr(request.auth, "id", None)
         if user_id:
-            return f"user:{user_id}"
+            return f"user:{user_id}", is_new
 
     # Fall back to cookie-based cart for anonymous users
     if not cart_id:
         # Generate new cart ID
         import uuid
-
         cart_id = str(uuid.uuid4())
+        is_new = True
 
-    return cart_id
+    return cart_id, is_new
+
+
+def create_cart_response(data: CartResponseSchema, cart_id: str, is_new_cart: bool) -> HttpResponse:
+    """
+    Create cart response with optional cart_id cookie.
+
+    Args:
+        data: Cart response data
+        cart_id: Cart identifier
+        is_new_cart: Whether this is a newly created cart (needs cookie)
+
+    Returns:
+        HttpResponse with cart data and optional Set-Cookie header
+    """
+    from ninja.responses import Response
+    response = Response(data)
+
+    # Set cart_id cookie for new anonymous carts
+    if is_new_cart and not cart_id.startswith("user:"):
+        # Cookie settings for security and persistence
+        cookie_settings = {
+            "max_age": 30 * 24 * 60 * 60,  # 30 days
+            "httponly": True,               # Not accessible via JavaScript
+            "secure": not settings.DEBUG,   # Secure in production
+            "samesite": "Lax",              # CSRF protection
+            "path": "/",                   # Available site-wide
+        }
+        response.set_cookie("cart_id", cart_id, **cookie_settings)
+
+    return response
 
 
 # ============================================================================
@@ -170,9 +207,11 @@ def get_cart(request: HttpRequest):
     Get current cart contents.
 
     Returns cart items with product details and totals.
+    Sets cart_id cookie for new anonymous sessions.
     """
-    cart_id = get_cart_id_from_request(request)
-    return get_cart_response(cart_id)
+    cart_id, is_new = get_cart_id_from_request(request)
+    data = get_cart_response(cart_id)
+    return create_cart_response(data, cart_id, is_new)
 
 
 @router.post("/add/", response=CartResponseSchema, auth=JWTAuth(required=False))
@@ -227,7 +266,8 @@ def remove_item_from_cart(request: HttpRequest, product_id: int):
 
     cart_service["remove_from_cart"](cart_id, product_id)
 
-    return get_cart_response(cart_id)
+    data = get_cart_response(cart_id)
+    return create_cart_response(data, cart_id, is_new)
 
 
 @router.delete("/clear/", response=MessageSchema, auth=JWTAuth(required=False))
@@ -251,13 +291,15 @@ def get_cart_count(request: HttpRequest):
     Get total item count in cart.
 
     Returns total quantity (sum of all item quantities).
+    Sets cart_id cookie for new anonymous sessions.
     """
-    cart_id = get_cart_id_from_request(request)
+    cart_id, is_new = get_cart_id_from_request(request)
     cart_service = get_cart_service()
 
     count = cart_service["get_cart_item_count"](cart_id)
+    data = CartItemCountSchema(count=count)
 
-    return CartItemCountSchema(count=count)
+    return create_cart_response(data, cart_id, is_new)
 
 
 @router.get("/summary/", response=CartResponseSchema, auth=JWTAuth(required=False))
@@ -266,6 +308,8 @@ def get_cart_summary_endpoint(request: HttpRequest):
     Get cart summary with totals.
 
     Alias for GET /cart/ - returns full cart with totals.
+    Sets cart_id cookie for new anonymous sessions.
     """
-    cart_id = get_cart_id_from_request(request)
-    return get_cart_response(cart_id)
+    cart_id, is_new = get_cart_id_from_request(request)
+    data = get_cart_response(cart_id)
+    return create_cart_response(data, cart_id, is_new)
