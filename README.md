@@ -43,18 +43,20 @@
 
 ## 🏗️ Tech Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Frontend** | Next.js 16 + React 19 | Server Components for SEO, Edge functions |
-| **Styling** | Tailwind CSS v4 (CSS-first) | OKLCH color space, Lightning CSS |
-| **Animations** | Framer Motion | Smooth micro-interactions |
-| **State** | TanStack Query v5 | Server state management |
-| **Backend** | Django 6 + Django Ninja | Rapid API with Pydantic v2 |
-| **Database** | PostgreSQL 17 | JSONB optimization, vacuum efficiency |
-| **Cache** | Redis 7.4 | Sessions, cart persistence, rate limiting |
-| **Auth** | JWT + HttpOnly Cookies | XSS protection via BFF pattern |
-| **Payment** | Stripe Singapore | SGD currency, GrabPay, PayNow |
-| **Testing** | Vitest + Playwright | Unit + E2E test coverage |
+| Layer | Technology | Version | Purpose |
+|-------|-----------|---------|---------|
+| **Frontend** | Next.js | 16.2.3+ | App Router, Server Components, Turbopack |
+| **Framework** | React | 19.2.5+ | Concurrent features, Server Actions |
+| **Styling** | Tailwind CSS | v4.2.2 | CSS-first theming, OKLCH colors |
+| **Animations** | Framer Motion | 12.38.0+ | Smooth micro-interactions |
+| **State** | TanStack Query | 5.99.0+ | Server state management |
+| **Backend** | Django | 6.0.4+ | Python 3.12+, Async support |
+| **API** | Django Ninja | 1.6.2+ | Pydantic v2 validation |
+| **Database** | PostgreSQL | 17 | JSONB optimization |
+| **Cache** | Redis | 7.4-alpine | Sessions, cart persistence (30-day TTL) |
+| **Auth** | JWT + HttpOnly Cookies | - | XSS protection via BFF pattern |
+| **Payment** | Stripe | 14.4.1+ | SGD, GrabPay, PayNow |
+| **Testing** | Vitest + Playwright | Latest | Unit + E2E test coverage |
 
 ---
 
@@ -64,407 +66,257 @@
 
 ```
 cha-yuan/
-├── 📁 backend/                          # Django 6 Backend
-│   ├── 📄 api_registry.py               # Centralized API router registration
+├── 📁 backend/                    # Django 6 Backend
+│   ├── 📄 api_registry.py         # Centralized API router (CRITICAL)
 │   ├── 📁 apps/
-│   │   ├── 📁 api/v1/                     # API endpoints (Django Ninja)
-│   │   │   ├── 📄 products.py             # Product catalog API
-│   │   │   ├── 📄 quiz.py                 # Preference quiz API
-│   │   │   ├── 📄 cart.py                 # Shopping cart API
-│   │   │   ├── 📄 checkout.py             # Stripe checkout API
-│   │   │   ├── 📄 subscriptions.py        # Subscription management API
-│   │   │   └── 📄 content.py              # Articles & culture content
-│   │   ├── 📁 commerce/
-│   │   │   ├── 📄 models.py               # Product, Order, Subscription models
-│   │   │   ├── 📄 curation.py             # AI curation algorithm
-│   │   │   ├── 📄 admin.py                # Django Admin customization
-│   │   │   └── 📁 management/commands/      # Seed data scripts
-│   │   ├── 📁 content/
-│   │   │   ├── 📄 models.py               # Quiz, Article, UserPreference models
-│   │   │   ├── 📄 admin.py                # Quiz admin with inline choices
-│   │   │   └── 📄 seed_quiz.py            # Quiz data seeder
-│   │   └── 📁 core/
-│   │       ├── 📄 models.py               # User model with SG validation
-│   │       ├── 📄 authentication.py       # JWT + HttpOnly cookies
-│   │       └── 📁 sg/                     # Singapore utilities (GST, etc.)
-│   ├── 📁 chayuan/                        # Django project config
-│   │   ├── 📄 settings/                   # Environment-specific settings
-│   │   └── 📄 urls.py                       # URL configuration
-│   └── 📁 requirements/                   # Python dependencies
+│   │   ├── 📁 api/v1/            # Django Ninja API endpoints
+│   │   │   ├── 📄 products.py    # Product catalog API
+│   │   │   ├── 📄 cart.py        # Shopping cart API
+│   │   │   ├── 📄 checkout.py    # Stripe checkout & webhooks
+│   │   │   ├── 📄 content.py     # Articles & culture API
+│   │   │   ├── 📄 quiz.py        # Quiz & preferences API
+│   │   │   └── 📄 subscriptions.py # Subscription management
+│   │   ├── 📁 commerce/          # Product, Order, Subscription
+│   │   │   ├── 📄 models.py      # Product, Origin, TeaCategory models
+│   │   │   ├── 📄 cart.py        # Redis cart service (418 lines)
+│   │   │   ├── 📄 curation.py    # AI curation algorithm (60/30/10)
+│   │   │   ├── 📄 stripe_sg.py   # Singapore Stripe integration
+│   │   │   ├── 📄 admin.py       # Django Admin customization
+│   │   │   └── 📁 management/commands/
+│   │   │       ├── 📄 seed_products.py  # Seed 12 premium teas
+│   │   │       └── 📄 __init__.py
+│   │   ├── 📁 content/           # Quiz, Articles, User Preferences
+│   │   │   ├── 📄 models.py      # QuizQuestion, QuizChoice, UserPreference
+│   │   │   ├── 📄 admin.py       # Quiz admin with inline choices
+│   │   │   └── 📁 management/commands/
+│   │   │       ├── 📄 seed_quiz.py    # Seed 6 quiz questions
+│   │   │       └── 📄 __init__.py
+│   │   └── 📁 core/              # Users, Auth, Singapore Utilities
+│   │       ├── 📄 models.py      # User with SG validation
+│   │       ├── 📄 authentication.py  # JWT + HttpOnly cookies
+│   │       ├── 📄 admin.py       # User admin
+│   │       └── 📁 sg/            # Singapore-specific utilities
+│   │           ├── 📄 validators.py   # Phone, postal code validation
+│   │           └── 📄 pricing.py      # GST calculation
+│   ├── 📁 chayuan/               # Django project config
+│   │   ├── 📁 settings/          # Environment-specific settings
+│   │   │   ├── 📄 base.py
+│   │   │   ├── 📄 development.py
+│   │   │   └── 📄 production.py
+│   │   └── 📄 urls.py            # URL configuration
+│   └── 📁 requirements/          # Python dependencies
+│       ├── 📄 base.txt
+│       ├── 📄 development.txt
+│       └── 📄 production.txt
 │
-├── 📁 frontend/                           # Next.js 16 Frontend
-│   ├── 📁 app/                            # Next.js App Router
-│   │   ├── 📄 page.tsx                      # Home page (Hero)
-│   │   ├── 📄 layout.tsx                    # Root layout, fonts
-│   │   ├── 📄 globals.css                   # Tailwind v4 theme config
-│   │   ├── 📁 api/proxy/[...path]/          # BFF proxy to Django
+├── 📁 frontend/                  # Next.js 16 Frontend
+│   ├── 📁 app/                   # App Router (Next.js 16)
+│   │   ├── 📄 page.tsx           # Home page (Hero landing)
+│   │   ├── 📄 layout.tsx         # Root layout with fonts
+│   │   ├── 📄 globals.css        # Tailwind v4 theme (349 lines)
+│   │   ├── 📁 api/proxy/[...path]/
+│   │   │   └── 📄 route.ts       # BFF Proxy Route
 │   │   ├── 📁 products/
-│   │   │   ├── 📄 page.tsx                    # Product catalog (Server Component)
+│   │   │   ├── 📄 page.tsx       # Product catalog (Server Component)
+│   │   │   ├── 📁 [slug]/
+│   │   │   │   └── 📄 page.tsx   # Product detail (Dynamic)
 │   │   │   └── 📁 components/
-│   │   │       └── 📄 product-catalog.tsx     # Interactive catalog (Client)
-│   │   ├── 📁 products/[slug]/
-│   │   │   └── 📄 page.tsx                    # Product detail page
-│   │   ├── 📁 quiz/
-│   │   │   └── 📄 page.tsx                    # Preference quiz
-│   │   ├── 📁 dashboard/subscription/
-│   │   │   └── 📄 page.tsx                    # Subscription dashboard
+│   │   │       └── 📄 product-catalog.tsx  # Client Component
 │   │   ├── 📁 culture/
-│   │   │   ├── 📄 page.tsx                    # Article listing
+│   │   │   ├── 📄 page.tsx       # Articles listing
 │   │   │   └── 📁 [slug]/
-│   │   │       └── 📄 page.tsx                # Article detail
-│   │   └── 📁 checkout/
-│   │       └── 📄 page.tsx                    # Checkout flow
+│   │   │       └── 📄 page.tsx   # Article detail
+│   │   ├── 📁 quiz/
+│   │   │   ├── 📄 page.tsx       # Quiz intro
+│   │   │   └── 📁 components/
+│   │   │       ├── 📄 quiz-intro.tsx
+│   │   │       ├── 📄 quiz-question.tsx
+│   │   │       └── 📄 quiz-results.tsx
+│   │   ├── 📁 checkout/
+│   │   │   ├── 📄 page.tsx
+│   │   │   ├── 📁 success/
+│   │   │   │   └── 📄 page.tsx
+│   │   │   └── 📁 cancel/
+│   │   │       └── 📄 page.tsx
+│   │   ├── 📁 dashboard/subscription/
+│   │   │   ├── 📄 page.tsx       # Subscription dashboard
+│   │   │   └── 📁 components/
+│   │   │       ├── 📄 subscription-status.tsx
+│   │   │       ├── 📄 next-billing.tsx
+│   │   │       ├── 📄 next-box-preview.tsx
+│   │   │       ├── 📄 preference-summary.tsx
+│   │   │       └── 📄 cancel-subscription.tsx
+│   │   └── 📁 shop/
+│   │       └── 📄 page.tsx       # Redirects to /products
+│   │
 │   ├── 📁 components/
-│   │   ├── 📄 product-card.tsx              # Product card component
-│   │   ├── 📄 product-grid.tsx              # Grid layout with animations
-│   │   ├── 📄 filter-sidebar.tsx            # Catalog filtering
-│   │   └── 📄 gst-badge.tsx                 # SGD price display
-│   ├── 📁 lib/
-│   │   ├── 📁 api/                          # API functions
-│   │   │   ├── 📄 products.ts               # Product API
-│   │   │   ├── 📄 quiz.ts                   # Quiz API
-│   │   │   └── 📄 cart.ts                   # Cart API
-│   │   ├── 📁 types/                        # TypeScript interfaces
-│   │   │   └── 📄 product.ts                # Product types
-│   │   ├── 📄 auth-fetch.ts                 # BFF proxy wrapper
-│   │   └── 📄 utils.ts                        # Utility functions
-│   ├── 📁 public/                           # Static assets
-│   └── 📄 package.json
+│   │   ├── 📁 ui/                # shadcn primitives
+│   │   │   ├── 📄 button.tsx
+│   │   │   ├── 📄 input.tsx
+│   │   │   ├── 📄 label.tsx
+│   │   │   ├── 📄 sheet.tsx
+│   │   │   ├── 📄 scroll-area.tsx
+│   │   │   └── 📄 separator.tsx
+│   │   ├── 📁 sections/          # Page sections
+│   │   │   ├── 📄 hero.tsx
+│   │   │   ├── 📄 navigation.tsx
+│   │   │   ├── 📄 philosophy.tsx
+│   │   │   ├── 📄 collection.tsx
+│   │   │   ├── 📄 culture.tsx
+│   │   │   ├── 📄 shop-cta.tsx
+│   │   │   ├── 📄 subscribe.tsx
+│   │   │   └── 📄 footer.tsx
+│   │   ├── 📄 product-card.tsx
+│   │   ├── 📄 product-grid.tsx
+│   │   ├── 📄 product-gallery.tsx
+│   │   ├── 📄 related-products.tsx
+│   │   ├── 📄 filter-sidebar.tsx
+│   │   ├── 📄 article-card.tsx
+│   │   ├── 📄 article-grid.tsx
+│   │   ├── 📄 article-content.tsx
+│   │   ├── 📄 category-badge.tsx
+│   │   ├── 📄 gst-badge.tsx
+│   │   ├── 📄 cart-drawer.tsx
+│   │   └── 📄 sg-address-form.tsx
+│   │
+│   ├── 📁 lib/                   # Utilities & API
+│   │   ├── 📁 api/
+│   │   │   ├── 📄 products.ts    # Product API
+│   │   │   ├── 📄 quiz.ts        # Quiz API
+│   │   │   └── 📄 subscription.ts  # Subscription API
+│   │   ├── 📁 types/
+│   │   │   ├── 📄 product.ts
+│   │   │   ├── 📄 quiz.ts
+│   │   │   └── 📄 subscription.ts
+│   │   ├── 📁 hooks/
+│   │   │   └── 📄 use-subscription.ts
+│   │   ├── 📄 auth-fetch.ts      # BFF wrapper (148 lines)
+│   │   ├── 📄 animations.ts      # Framer Motion variants
+│   │   └── 📄 utils.ts
+│   │
+│   ├── 📁 public/images/         # Static assets
+│   ├── 📄 next.config.ts
+│   ├── 📄 package.json
+│   └── 📄 tsconfig.json
 │
-├── 📁 infra/                              # Infrastructure
-│   └── 📁 docker/
-│       └── 📄 docker-compose.yml            # PostgreSQL 17 + Redis 7.4
+├── 📁 infra/docker/              # Docker Infrastructure
+│   ├── 📄 docker-compose.yml     # PostgreSQL 17 + Redis 7.4
+│   ├── 📄 Dockerfile.backend.dev
+│   └── 📄 Dockerfile.frontend.dev
 │
-├── 📁 docs/                               # Documentation
+├── 📁 docs/                      # Documentation
+│   ├── 📄 PHASE_0_SUBPLAN.md     # Foundation & Docker
+│   ├── 📄 PHASE_1_SUBPLAN.md     # Backend Models
+│   ├── 📄 PHASE_2_SUBPLAN.md     # JWT Auth + BFF
+│   ├── 📄 PHASE_3_SUBPLAN.md     # Design System
+│   ├── 📄 PHASE_4_SUBPLAN.md     # Product Catalog
+│   ├── 📄 PHASE_5_SUBPLAN.md     # Cart & Checkout
+│   ├── 📄 PHASE_6_SUBPLAN.md     # Tea Culture
+│   ├── 📄 PHASE_7_SUBPLAN.md     # Quiz & Subscription
+│   └── 📄 Project_Architecture_Document.md
+│
+├── 📁 plan/                      # Planning documents
 │   ├── 📄 MASTER_EXECUTION_PLAN.md
-│   └── 📄 PHASE_7_SUBPLAN.md
+│   └── 📄 Project_Requirements_Document.md
 │
-└── 📄 .env.example                        # Environment variables template
+├── 📄 CLAUDE.md                  # Concise agent briefing
+├── 📄 GEMINI.md                  # Gemini CLI context
+├── 📄 AGENTS.md                  # Project-specific context
+├── 📄 .env.example
+└── 📄 README.md                  # This file
 ```
 
-### System Architecture Diagram
+### System Architecture
 
 ```mermaid
-architecture-beta
-    %% User Layer
-    group user_grp(cloud)["User Layer"]
-    service user_svc(user)["Customer"] in user_grp
+flowchart TB
+    subgraph Client["Client Layer"]
+        Browser["Web Browser"]
+    end
 
-    %% Client Layer
-    group client_grp(server)["Client Layer"]
-    service next_svc(react)["Next.js 16 App Router"] in client_grp
-    service react_svc(react)["React 19 Components"] in client_grp
-    service tailwind_svc(css)["Tailwind CSS v4"] in client_grp
-    service motion_svc(animation)["Framer Motion"] in client_grp
+    subgraph Frontend["Frontend Layer (Next.js 16)"]
+        NextApp["Next.js App"]
+        ServerComp["Server Components (RSC)"]
+        ClientComp["Client Components"]
+        BFF["BFF Proxy Route<br/>/api/proxy/*"]
+    end
 
-    %% BFF Layer
-    group bff_grp(cloud)["BFF Layer (Edge)"]
-    service proxy_svc(server)["BFF Proxy Route"] in bff_grp
-    service jwt_svc(lock)["JWT in HttpOnly Cookies"] in bff_grp
+    subgraph Backend["Backend Layer (Django 6)"]
+        NinjaAPI["Django Ninja API"]
+        Auth["JWT Authentication<br/>HttpOnly Cookies"]
+        CartSvc["Cart Service<br/>(Redis)"]
+        Curation["Curation Engine<br/>(60/30/10 Algorithm)"]
+        Stripe["Stripe Integration"]
+    end
 
-    %% Backend Layer
-    group backend_grp(database)["Backend Layer"]
-    service django_svc(python)["Django 6"] in backend_grp
-    service ninja_svc(api)["Django Ninja API"] in backend_grp
-    service auth_svc(lock)["PyJWT Auth"] in backend_grp
-    service curation_svc(algorithm)["Curation Engine"] in backend_grp
+    subgraph Data["Data Layer"]
+        Postgres[("PostgreSQL 17<br/>Products, Orders, Users")]
+        Redis[("Redis 7.4<br/>Cart, Sessions, Cache")]
+    end
 
-    %% Data Layer
-    group data_grp(database)["Data Layer"]
-    service postgres_svc(postgres)["PostgreSQL 17"] in data_grp
-    service redis_svc(redis)["Redis 7.4"] in data_grp
+    subgraph External["External Services"]
+        StripeAPI["Stripe API<br/>(SGD, GrabPay, PayNow)"]
+    end
 
-    %% External Services
-    group external_grp(cloud)["External Services"]
-    service stripe_svc(stripe)["Stripe Singapore"] in external_grp
-    service storage_svc(storage)["Cloud Storage"] in external_grp
+    Browser --> NextApp
+    NextApp --> ServerComp
+    NextApp --> ClientComp
 
-    %% Connections
-    user_svc:B -- T:next_svc
-    next_svc:R -- L:react_svc
-    react_svc:R -- L:tailwind_svc
-    react_svc:B -- T:motion_svc
+    ServerComp --> |"Direct API Call<br/>authFetch()"| NinjaAPI
+    ClientComp --> |"Proxied Request"| BFF
+    BFF --> |"Server-side Forward"| NinjaAPI
 
-    next_svc{group}:B -- T:proxy_svc{group}
-    proxy_svc:R -- L:jwt_svc
-    proxy_svc{group}:B -- T:ninja_svc{group}
+    NinjaAPI --> Auth
+    NinjaAPI --> CartSvc
+    NinjaAPI --> Curation
+    NinjaAPI --> Stripe
 
-    ninja_svc:R -- L:django_svc
-    ninja_svc:B -- T:auth_svc
-    django_svc:R -- L:curation_svc
-
-    django_svc{group}:B -- T:postgres_svc{group}
-    django_svc{group}:B -- T:redis_svc{group}
-    django_svc{group}:B -- T:stripe_svc{group}
+    Auth --> Postgres
+    CartSvc --> Redis
+    Curation --> Postgres
+    Stripe --> StripeAPI
+    NinjaAPI --> Postgres
 ```
 
-### User Journey Flow
+### Architecture Patterns
 
-```mermaid
-flowchart TD
-    A[Landing Page] --> B{Authenticated?}
-    
-    B -->|No| C[Browse Products]
-    B -->|Yes| D[Dashboard]
-    
-    C --> E[Product Detail]
-    E --> F[Add to Cart]
-    
-    F --> G{Has Account?}
-    G -->|No| H[Sign Up / Login]
-    G -->|Yes| I[Checkout]
-    
-    H --> J[Complete Quiz]
-    J --> K[View Preferences]
-    K --> I
-    
-    I --> L[Stripe Checkout]
-    L --> M{Payment Success?}
-    M -->|Yes| N[Order Confirmation]
-    M -->|No| O[Payment Failed]
-    
-    N --> P[Order History]
-    
-    D --> Q[Subscription Dashboard]
-    Q --> R[View Next Box]
-    R --> S[Pause/Cancel Subscription]
-    
-    C --> T[Filter by Category]
-    C --> U[Filter by Origin]
-    C --> V[Filter by Season]
-    
-    D --> W[View Preferences]
-    D --> X[Update Profile]
-```
-
-### Application Logic Flow
-
-```mermaid
-sequenceDiagram
-    actor User
-    participant Browser
-    participant NextJS as Next.js 16
-    participant BFF as BFF Proxy
-    participant Django as Django API
-    participant DB as PostgreSQL
-    participant Redis
-
-    %% Product Catalog Flow
-    rect rgb(240, 255, 240)
-        Note over User,Django: Product Catalog Flow
-        User->>Browser: Navigate to /products
-        Browser->>NextJS: Request page
-        NextJS->>Django: GET /api/v1/products/products/
-        Django->>DB: Query products
-        DB-->>Django: Return products
-        Django-->>NextJS: JSON response
-        NextJS->>NextJS: Server Component renders HTML
-        NextJS-->>Browser: HTML + Hydration
-        Browser-->>User: Display product grid
-    end
-
-    %% Quiz Flow
-    rect rgb(255, 245, 240)
-        Note over User,Django: Preference Quiz Flow
-        User->>Browser: Answer quiz questions
-        Browser->>BFF: POST /api/proxy/api/v1/quiz/submit/
-        BFF->>Django: Forward with JWT
-        Django->>Django: Calculate preferences (weighted scoring)
-        Django->>DB: Save UserPreference
-        DB-->>Django: Saved
-        Django-->>BFF: Top 3 categories + scores
-        BFF-->>Browser: JSON response
-        Browser-->>User: Show preference summary
-    end
-
-    %% Subscription Curation Flow
-    rect rgb(240, 240, 255)
-        Note over User,Django: Monthly Curation Flow
-        Note over Django: Cron job triggers monthly
-        Django->>DB: Get active subscriptions
-        loop Each subscription
-            Django->>DB: Get user preferences
-            Django->>Django: curate_subscription_box()
-            Django->>Django: get_current_season_sg()
-            Django->>Django: score_products() - weighted algorithm
-            Django->>DB: Save next_curation_override
-        end
-    end
-
-    %% Cart Flow
-    rect rgb(255, 255, 240)
-        Note over User,Redis: Shopping Cart Flow
-        User->>Browser: Add to cart
-        Browser->>BFF: POST /api/v1/cart/add/
-        BFF->>Django: Forward request
-        Django->>Redis: HSET cart:{cart_id} product_id quantity
-        Redis-->>Django: OK
-        Django-->>BFF: Cart updated
-        BFF-->>Browser: Response
-        Browser-->>User: Update cart UI
-    end
-
-    %% Checkout Flow
-    rect rgb(240, 255, 255)
-        Note over User,Stripe: Checkout Flow
-        User->>Browser: Proceed to checkout
-        Browser->>BFF: POST /api/v1/checkout/create-session/
-        BFF->>Django: Forward request
-        Django->>Stripe: create_checkout_session()
-        Stripe-->>Django: Session URL
-        Django-->>BFF: Redirect URL
-        BFF-->>Browser: 302 to Stripe
-        Browser-->>User: Redirect to Stripe
-        User->>Stripe: Complete payment
-        Stripe->>Django: Webhook payment_intent.succeeded
-        Django->>DB: Create Order
-        Django->>Redis: Clear cart
-    end
-```
-
-### Entity Relationship Diagram
-
-```mermaid
-erDiagram
-    USER ||--o{ USER_PREFERENCE : has
-    USER ||--o{ ADDRESS : has_many
-    USER ||--o{ SUBSCRIPTION : subscribes_to
-    USER ||--o{ ORDER : places
-    
-    USER_PREFERENCE {
-        int user_id PK,FK
-        json preferences
-        datetime quiz_completed_at
-    }
-    
-    ADDRESS {
-        int id PK
-        int user_id FK
-        string block_street
-        string unit
-        string postal_code
-        boolean is_default
-    }
-    
-    TEA_CATEGORY ||--o{ PRODUCT : categorizes
-    TEA_CATEGORY {
-        int id PK
-        string name
-        string slug
-        int fermentation_level
-        string description
-        int brewing_temp_celsius
-        int brewing_time_seconds
-    }
-    
-    ORIGIN ||--o{ PRODUCT : sources
-    ORIGIN {
-        int id PK
-        string name
-        string slug
-        string region
-        string description
-    }
-    
-    PRODUCT {
-        int id PK
-        string name
-        string slug
-        decimal price_sgd
-        boolean gst_inclusive
-        int stock
-        int category_id FK
-        int origin_id FK
-        string harvest_season
-        int harvest_year
-        boolean is_subscription_eligible
-    }
-    
-    SUBSCRIPTION ||--o{ SUBSCRIPTION_SHIPMENT : receives
-    SUBSCRIPTION {
-        int id PK
-        int user_id FK
-        string plan
-        decimal price_sgd
-        json next_curation_override
-        datetime next_billing_date
-    }
-    
-    SUBSCRIPTION_SHIPMENT }o--o{ PRODUCT : contains
-    SUBSCRIPTION_SHIPMENT {
-        int id PK
-        int subscription_id FK
-        datetime shipped_at
-        string tracking_number
-        string curated_by
-    }
-    
-    ORDER ||--o{ ORDER_ITEM : contains
-    ORDER {
-        int id PK
-        int user_id FK
-        string status
-        decimal total_sgd
-        decimal gst_amount_sgd
-        string stripe_payment_intent_id
-        datetime created_at
-    }
-    
-    ORDER_ITEM }o--|| PRODUCT : references
-    ORDER_ITEM {
-        int id PK
-        int order_id FK
-        int product_id FK
-        int quantity
-        decimal price_sgd_at_time
-    }
-    
-    QUIZ_QUESTION ||--o{ QUIZ_CHOICE : has
-    QUIZ_QUESTION {
-        int id PK
-        string question_text
-        int order
-        boolean is_required
-    }
-    
-    QUIZ_CHOICE {
-        int id PK
-        int question_id FK
-        string choice_text
-        json preference_weights
-        int order
-    }
-```
+| Pattern | Implementation | Purpose |
+|---------|---------------|---------|
+| **BFF (Backend for Frontend)** | `/api/proxy/[...path]/` | Secure JWT handling via HttpOnly cookies |
+| **Centralized API Registry** | `backend/api_registry.py` | Eager router registration at import time |
+| **Server-First** | RSC for SEO-critical pages | Product catalog, articles render server-side |
+| **CQRS (Cart)** | Redis writes, PostgreSQL reads | 30-day cart persistence |
+| **Curation Algorithm** | `score_products()` with weights | 60% preferences + 30% season + 10% inventory |
 
 ---
 
 ## ✨ Features
 
-### Implemented Phases
+### Implementation Status
 
-| Phase | Feature | Status |
-|-------|---------|--------|
-| **0** | Foundation & Docker Setup | ✅ Complete |
-| **1** | Backend Models (User, Product, Order) | ✅ Complete |
-| **2** | JWT Authentication + BFF | ✅ Complete |
-| **3** | Design System (Tailwind v4 + shadcn) | ✅ Complete |
-| **4** | Product Catalog | ✅ Complete |
-| **5** | Cart & Checkout | ✅ Complete |
-| **6** | Tea Culture Content | ✅ Complete |
-| **7** | Quiz & Subscription | ✅ Complete |
-| **8** | Testing & Deployment | 🚧 In Progress |
+| Phase | Feature | Status | Notes |
+|-------|---------|--------|-------|
+| **0** | Foundation & Docker Setup | ✅ Complete | PostgreSQL 17, Redis 7.4 |
+| **1** | Backend Models | ✅ Complete | Product, Order, Subscription, User |
+| **2** | JWT Authentication + BFF | ✅ Complete | HttpOnly cookies, proxy route |
+| **3** | Design System | ✅ Complete | Tailwind v4, shadcn, animations |
+| **4** | Product Catalog | ✅ Complete | Listing + Detail with filters |
+| **5** | Cart & Checkout | ✅ Complete | Redis cart, Stripe SG |
+| **6** | Tea Culture Content | ✅ Complete | Articles, markdown rendering |
+| **7** | Quiz & Subscription | ✅ Complete | Curation algorithm, dashboard |
+| **8** | Testing & Deployment | 🚧 In Progress | 93 backend + 39 frontend tests passing |
 
 ### Core Features
 
-- 🧭 **Hero Landing Page**: Storytelling with Eastern aesthetic
-- 🛍️ **Product Catalog**: Filter by category, origin, fermentation, season
+- 🧭 **Hero Landing Page**: Storytelling with Eastern aesthetic, scroll animations
+- 🛍️ **Product Catalog**: Filter by category, origin, fermentation level, season
 - 📝 **Preference Quiz**: Weighted scoring algorithm for personalized recommendations
-- 🎁 **Subscription Service**: Monthly curated boxes with auto-curation
-- 🛒 **Shopping Cart**: Redis-backed persistent cart
+- 🎁 **Subscription Service**: Monthly curated boxes with 60/30/10 curation algorithm
+- 🛒 **Shopping Cart**: Redis-backed persistent cart (30-day TTL)
 - 💳 **Stripe Checkout**: Singapore integration (SGD, GrabPay, PayNow)
-- 📚 **Tea Culture Content**: Brewing guides, tasting notes, history articles
-- 👤 **User Dashboard**: Subscription management, order history
-- 🎨 **Eastern Design**: Tea brand colors, serif typography, paper textures
+- 📚 **Tea Culture Content**: Markdown articles with brewing guides
+- 👤 **User Dashboard**: Subscription management, order history, preferences
+- 🎨 **Eastern Design**: Tea brand colors, Playfair Display typography, paper textures
 
 ---
 
@@ -507,9 +359,9 @@ cd backend
 python -m venv .venv
 source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements/development.txt
-python manage.py migrate
-python manage.py seed_products
-python manage.py seed_quiz
+python manage.py migrate --settings=chayuan.settings.development
+python manage.py seed_products --settings=chayuan.settings.development
+python manage.py seed_quiz --settings=chayuan.settings.development
 ```
 
 5. **Set up Frontend**
@@ -525,10 +377,12 @@ npm install
 
 ```bash
 # Terminal 1: Start Django
-npm run dev:backend
+cd backend
+python manage.py runserver 127.0.0.1:8000 --settings=chayuan.settings.development
 
 # Terminal 2: Start Next.js
-npm run dev:frontend
+cd frontend
+npm run dev  # Uses Turbopack (--turbopack flag in package.json)
 ```
 
 **Access the application:**
@@ -544,94 +398,27 @@ npm run dev:frontend
 
 ```bash
 cd backend
-python -m pytest --cov=apps --cov-report=html -v
+pytest -v                                    # Run all tests
+pytest apps/commerce/tests/ -v              # Commerce tests
+pytest apps/content/tests/ -v               # Content/Quiz tests
+pytest --cov=apps --cov-report=html -v      # With coverage
 ```
 
 ### Frontend Tests
 
 ```bash
 cd frontend
-npm test              # Unit tests (Vitest)
-npm run test:e2e      # E2E tests (Playwright)
+npm test                 # Unit tests (Vitest)
+npm run test:coverage    # With coverage
+npm run test:e2e         # E2E tests (Playwright)
+npm run test:e2e:ui      # Playwright with UI
 ```
 
 ### Test Coverage
 
-- **Backend**: Target 85%+ coverage (pytest)
-- **Frontend**: Target 85%+ coverage (Vitest)
+- **Backend**: 93+ tests passing (pytest)
+- **Frontend Unit**: 39 tests passing (Vitest)
 - **E2E**: Critical user journeys (Playwright)
-
----
-
-## 🚢 Deployment
-
-### Docker Production Setup
-
-```bash
-cd infra/docker
-docker-compose -f docker-compose.prod.yml up -d
-```
-
-### Environment Variables (Production)
-
-```bash
-# Required
-SECRET_KEY=your-production-secret-key
-DATABASE_URL=postgresql://user:pass@host:5432/chayuan
-REDIS_URL=redis://host:6379/0
-STRIPE_SECRET_KEY=sk_live_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-
-# Singapore Context
-GST_RATE=0.09
-CURRENCY=SGD
-TIMEZONE=Asia/Singapore
-LOCALE=en_SG
-```
-
-### Vercel Deployment (Frontend)
-
-```bash
-# Build
-npm run build
-
-# Deploy
-vercel --prod
-```
-
-### Security Checklist
-
-- [ ] JWT tokens in HttpOnly cookies only
-- [ ] CSRF protection enabled
-- [ ] Rate limiting on API endpoints (Redis-based)
-- [ ] SQL injection prevention (Django ORM)
-- [ ] XSS prevention (Output encoding)
-- [ ] Content Security Policy headers
-- [ ] Stripe webhook signature verification
-- [ ] PDPA compliance audit
-
----
-
-## 📝 API Documentation
-
-### Authentication
-
-All protected endpoints require JWT in HttpOnly cookie (via BFF proxy).
-
-### Key Endpoints
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/products/products/` | GET | List products with filters |
-| `/api/v1/products/{slug}/` | GET | Product detail |
-| `/api/v1/quiz/questions/` | GET | Quiz questions (public) |
-| `/api/v1/quiz/submit/` | POST | Submit quiz answers |
-| `/api/v1/cart/` | GET | Get cart items |
-| `/api/v1/cart/add/` | POST | Add item to cart |
-| `/api/v1/checkout/create-session/` | POST | Create Stripe session |
-| `/api/v1/subscriptions/current/` | GET | Get subscription |
-
-Full API documentation available at `/docs/` when running locally.
 
 ---
 
@@ -642,16 +429,101 @@ Full API documentation available at `/docs/` when running locally.
 | Token | Hex | Usage |
 |-------|-----|-------|
 | `--color-tea-500` | `#5C8A4D` | Primary brand color |
-| `--color-tea-600` | `#4A7040` | Primary hover |
+| `--color-tea-600` | `#4A7040` | Primary hover state |
 | `--color-ivory-50` | `#FDFBF7` | Page background |
+| `--color-ivory-100` | `#FAF6EE` | Paper texture background |
 | `--color-bark-900` | `#2A1D14` | Text primary |
-| `--color-gold-500` | `#B8944D` | Accent, prices |
+| `--color-gold-500` | `#B8944D` | Accent, prices, CTAs |
+| `--color-terra-400` | `#C4724B` | Warm accents |
 
 ### Typography
 
 - **Display**: "Playfair Display", serif (headings)
 - **Sans**: "Inter", system-ui (body)
 - **Chinese**: "Noto Serif SC", serif (茶源 branding)
+
+### Animations
+
+Defined in `frontend/app/globals.css`:
+- `fadeInUp` - Content entrance (0.8s, cubic-bezier(0.16, 1, 0.3, 1))
+- `fadeIn` - Simple fade
+- `slideInLeft` - From left entrance
+- `leafFloat` - Floating decoration (4s infinite)
+- `steamRise` - Steam animation (2.5s infinite)
+- `reveal` - Scroll reveal
+
+---
+
+## 🇸🇬 Singapore Context
+
+### GST 9%
+
+All prices displayed inclusive of GST. Calculated with `ROUND_HALF_UP` following IRAS guidelines:
+
+```python
+GST_RATE = Decimal('0.09')
+
+def get_price_with_gst(self):
+    return self.price_sgd  # Already GST-inclusive
+
+def get_gst_amount(self):
+    return self.price_sgd - (self.price_sgd / Decimal('1.09'))
+```
+
+### Address Format
+
+```
+Block/Street: "Blk 123 Jurong East St 13"
+Unit: "#04-56"
+Postal Code: "600123" (6 digits, validated with ^\d{6}$)
+```
+
+### Phone Format
+
+```
+Format: +65 XXXX XXXX
+Validation: ^\+65\s?\d{8}$
+```
+
+### Stripe Integration
+
+```python
+stripe.checkout.Session.create(
+    payment_method_types=['card', 'grabpay', 'paynow'],
+    currency='sgd',
+    shipping_address_collection={'allowed_countries': ['SG']},
+    # ...
+)
+```
+
+---
+
+## 📝 API Documentation
+
+### Public Endpoints (No Auth)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/products/` | GET | List products (paginated, filtered) |
+| `/api/v1/products/{slug}/` | GET | Product detail |
+| `/api/v1/products/categories/` | GET | Tea categories |
+| `/api/v1/products/origins/` | GET | Tea origins |
+| `/api/v1/content/articles/` | GET | Articles list |
+| `/api/v1/content/articles/{slug}/` | GET | Article detail |
+| `/api/v1/quiz/questions/` | GET | Quiz questions |
+
+### Authenticated Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/cart/` | GET/POST/PUT/DELETE | Shopping cart operations |
+| `/api/v1/checkout/create-session/` | POST | Create Stripe checkout session |
+| `/api/v1/quiz/submit/` | POST | Submit quiz answers |
+| `/api/v1/quiz/preferences/` | GET | Get user preferences |
+| `/api/v1/subscriptions/current/` | GET | Get current subscription |
+| `/api/v1/subscriptions/cancel/` | POST | Cancel subscription |
+
+Full API documentation available at `/docs/` when running locally.
 
 ---
 
@@ -663,6 +535,14 @@ We follow **Test-Driven Development (TDD)**:
 2. **GREEN**: Write minimal code to pass
 3. **REFACTOR**: Improve while keeping tests green
 
+### Development Conventions
+
+1. **React 19**: Do NOT use `forwardRef`. Treat `ref` as a standard prop.
+2. **Next.js 15+**: Route `params` and `searchParams` are **Promises**. Always `await` them.
+3. **Tailwind v4**: CSS-first configuration in `globals.css`. NO `tailwind.config.js`.
+4. **Django Ninja**: Use relative paths in routers. Register in `api_registry.py`.
+5. **TypeScript**: Strict mode. No `any` — use `unknown` or specific interfaces.
+
 See `docs/` for detailed phase plans and architecture decisions.
 
 ---
@@ -671,7 +551,7 @@ See `docs/` for detailed phase plans and architecture decisions.
 
 MIT License - see [LICENSE](LICENSE) file
 
-### Singapore Market Compliance
+### Compliance
 
 - **PDPA**: Personal Data Protection Act compliance
 - **GST**: 9% Goods and Services Tax included in all prices
@@ -689,9 +569,9 @@ MIT License - see [LICENSE](LICENSE) file
 
 <div align="center">
 
-**[Visit CHA YUAN](https://cha-yuan.sg)** · 
-**[Documentation](docs/)** · 
-**[Report Bug](../../issues)** · 
+**[Visit CHA YUAN](https://cha-yuan.sg)** ·
+**[Documentation](docs/)** ·
+**[Report Bug](../../issues)** ·
 **[Request Feature](../../issues)**
 
 🍵 *Brew with intention. Sip with mindfulness.* 🍵
