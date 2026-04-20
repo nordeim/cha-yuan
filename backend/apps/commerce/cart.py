@@ -159,26 +159,27 @@ def get_cart_items(cart_id: str) -> list[dict[str, Any]]:
             # Get product details
             try:
                 product = Product.objects.get(id=product_id)
-                price_with_gst = product.price_with_gst_sgd
-                subtotal = price_with_gst * quantity
-
-                items.append(
-                    {
-                        "product_id": product_id,
-                        "quantity": quantity,
-                        "name": product.name,
-                        "slug": product.slug,
-                        "image": product.image.url if product.image else None,
-                        "weight_grams": product.weight_grams,
-                        "price_sgd": float(product.price_sgd),
-                        "price_with_gst": float(price_with_gst),
-                        "gst_inclusive": product.gst_inclusive,
-                        "subtotal": float(subtotal),
-                    }
-                )
             except Product.DoesNotExist:
                 # Product removed from DB, skip
                 continue
+
+            price_with_gst = product.get_price_with_gst()
+            subtotal = price_with_gst * quantity
+
+            items.append(
+                {
+                    "product_id": product_id,
+                    "quantity": quantity,
+                    "name": product.name,
+                    "slug": product.slug,
+                    "image": product.image.url if product.image else None,
+                    "weight_grams": product.weight_grams,
+                    "price_sgd": float(product.price_sgd),
+                    "price_with_gst": float(price_with_gst),
+                    "gst_inclusive": product.gst_inclusive,
+                    "subtotal": float(subtotal),
+                }
+            )
         except (ValueError, TypeError):
             # Invalid data, skip
             continue

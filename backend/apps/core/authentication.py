@@ -4,6 +4,7 @@ JWT Authentication with HttpOnly cookies for Singapore market.
 
 from datetime import timedelta
 from django.conf import settings
+from django.contrib.auth.models import AnonymousUser
 from django.utils import timezone
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import TokenError
@@ -148,8 +149,8 @@ class JWTAuth:
         Authenticate the request.
 
         Returns:
-            User instance if authenticated, None if not required and no token.
-            Raises AuthenticationError if required and no valid token.
+            User instance if authenticated, AnonymousUser if not required and no token.
+        Raises AuthenticationError if required and no valid token.
         """
         token = request.COOKIES.get("access_token")
         if not token:
@@ -157,22 +158,32 @@ class JWTAuth:
                 from ninja.errors import HttpError
 
                 raise HttpError(401, "Authentication required")
-            return None
+            # Return AnonymousUser for optional auth with no token
+            # This satisfies Django Ninja's truthiness check while allowing anonymous access
+            request.auth = AnonymousUser()
+            return AnonymousUser()
 
         user_id = JWTTokenManager.validate_access_token(token)
         if user_id:
             from apps.core.models import User
 
             try:
-                return User.objects.get(id=user_id, is_active=True)
+                user = User.objects.get(id=user_id, is_active=True)
+                # Attach user to request for later use
+                request.auth = user
+                return user
             except User.DoesNotExist:
                 pass
 
+        # Token exists but is invalid - handle based on required flag
         if self.required:
             from ninja.errors import HttpError
 
             raise HttpError(401, "Invalid or expired token")
-        return None
+
+        # If optional auth and token is invalid, return AnonymousUser for anonymous access
+        request.auth = AnonymousUser()
+        return AnonymousUser()
 
 
 # Backwards compatibility alias

@@ -7,6 +7,7 @@ RESTful API for cart operations following BFF pattern.
 from typing import List, Optional
 from decimal import Decimal
 
+from django.contrib.auth.models import AnonymousUser
 from ninja import Router, Schema, Field
 from ninja.errors import HttpError
 from django.http import HttpRequest
@@ -121,7 +122,8 @@ class MessageSchema(Schema):
 
 def get_cart_response(cart_id: str) -> CartResponseSchema:
     """Build cart response from cart_id."""
-    summary = get_cart_summary(cart_id)
+    cart_service = get_cart_service()
+    summary = cart_service["get_cart_summary"](cart_id)
 
     return CartResponseSchema(
         items=summary["items"],
@@ -137,13 +139,17 @@ def get_cart_id_from_request(request: HttpRequest) -> str:
     # Try to get from cookies first
     cart_id = request.COOKIES.get("cart_id")
 
-    # If authenticated, use user-based cart
-    if hasattr(request, "auth") and request.auth:
-        user_id = getattr(request.auth, "user_id", None)
+    # Check if actually authenticated (not AnonymousUser)
+    # AnonymousUser is truthy but should not be treated as authenticated
+    if (hasattr(request, "auth") and request.auth and
+        not isinstance(request.auth, AnonymousUser) and
+        getattr(request.auth, 'is_authenticated', False)):
+        # Use user ID from authenticated user (id, not user_id)
+        user_id = getattr(request.auth, "id", None)
         if user_id:
             return f"user:{user_id}"
 
-    # Fall back to cookie-based cart
+    # Fall back to cookie-based cart for anonymous users
     if not cart_id:
         # Generate new cart ID
         import uuid
@@ -177,9 +183,10 @@ def add_item_to_cart(request: HttpRequest, data: AddToCartRequestSchema):
     If item already exists, increments quantity.
     """
     cart_id = get_cart_id_from_request(request)
+    cart_service = get_cart_service()
 
     try:
-        add_to_cart(cart_id=cart_id, product_id=data.product_id, quantity=data.quantity)
+        cart_service["add_to_cart"](cart_id=cart_id, product_id=data.product_id, quantity=data.quantity)
     except ValueError as e:
         raise HttpError(400, str(e))
 
@@ -194,9 +201,10 @@ def update_cart_item_quantity(request: HttpRequest, data: UpdateCartRequestSchem
     Set quantity to 0 to remove item.
     """
     cart_id = get_cart_id_from_request(request)
+    cart_service = get_cart_service()
 
     try:
-        update_cart_item(
+        cart_service["update_cart_item"](
             cart_id=cart_id, product_id=data.product_id, quantity=data.quantity
         )
     except ValueError as e:
@@ -215,8 +223,9 @@ def remove_item_from_cart(request: HttpRequest, product_id: int):
     Idempotent - succeeds even if item not in cart.
     """
     cart_id = get_cart_id_from_request(request)
+    cart_service = get_cart_service()
 
-    remove_from_cart(cart_id, product_id)
+    cart_service["remove_from_cart"](cart_id, product_id)
 
     return get_cart_response(cart_id)
 
@@ -229,8 +238,9 @@ def clear_cart_contents(request: HttpRequest):
     Removes all items from cart.
     """
     cart_id = get_cart_id_from_request(request)
+    cart_service = get_cart_service()
 
-    clear_cart(cart_id)
+    cart_service["clear_cart"](cart_id)
 
     return MessageSchema(message="Cart cleared successfully")
 
@@ -243,8 +253,9 @@ def get_cart_count(request: HttpRequest):
     Returns total quantity (sum of all item quantities).
     """
     cart_id = get_cart_id_from_request(request)
+    cart_service = get_cart_service()
 
-    count = get_cart_item_count(cart_id)
+    count = cart_service["get_cart_item_count"](cart_id)
 
     return CartItemCountSchema(count=count)
 

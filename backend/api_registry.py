@@ -15,16 +15,23 @@ References:
 from ninja import NinjaAPI
 
 # Create API instance with Singapore context
+# NOTE: No default auth - each endpoint specifies its own auth requirements
 api = NinjaAPI(
     title="CHA YUAN API",
     version="1.0.0",
     description="Premium Tea E-Commerce API for Singapore",
     docs_url="/docs/",
     openapi_url="/openapi.json",
+    auth=None,  # No default auth - each endpoint specifies its own
 )
 
 # Import and register routers at module level (eager registration)
 # This ensures routers are attached BEFORE Django's URL resolver runs
+
+# Authentication (must be first for auth endpoints)
+from apps.api.v1.auth import router as auth_router
+
+api.add_router("/auth/", auth_router, tags=["auth"])
 
 # Product catalog
 from apps.api.v1.products import router as products_router

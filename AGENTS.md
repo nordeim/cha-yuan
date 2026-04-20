@@ -480,6 +480,47 @@ You are successful when:
 
 ---
 
+## 📋 Recent Accomplishments (2026-04-20)
+
+### ✅ Landing Page Navigation Fixed
+
+**Critical Issue:** Products in "Curated by Nature" section were non-clickable
+
+**Solution:**
+- Added `slug` property to all tea items in collection data
+- Implemented `motion.create(Link)` for hydration-safe animated navigation
+- Updated seed_products.py to match landing page display values
+
+**Files Modified:**
+- `frontend/components/sections/collection.tsx`
+- `backend/apps/commerce/management/commands/seed_products.py`
+
+**Verification:**
+- TypeScript: 0 errors
+- Build: Production successful
+- Navigation: Landing → Product pages working
+
+### ✅ Documentation Sync
+
+- README.md: Updated file hierarchy (750 lines)
+- GEMINI.md: Updated technical details (150 lines)
+- Project_Architecture_Document.md: Complete structure (1,252 lines)
+- ACCOMPLISHMENTS.md: Created milestone tracking
+
+### 🔑 Key Lesson
+
+**Hydration Fix Pattern:**
+```typescript
+// ❌ INVALID: Link inside motion.div
+<Link href="/product"><motion.div>...</motion.div></Link>
+
+// ✅ VALID: motion.create(Link)
+const MotionLink = motion.create(Link);
+<MotionLink href="/product" whileHover="hover">...</MotionLink>
+```
+
+---
+
 *Generated from meticulous codebase analysis. Last updated: 2026-04-20*
 *Project Phase: 8 (Testing & Deployment)*
 *Status: Core functionality complete, production-ready pending final tests*
@@ -1544,6 +1585,49 @@ A task is complete when:
 3. **Performance**: Lighthouse audit (target ≥90)
 4. **Security Scan**: Dependency audit
 5. **Documentation**: API documentation update
+
+---
+
+## 📋 Recent Accomplishments (2026-04-20)
+
+### Major Milestone: Landing Page Navigation Fix
+
+**Critical Bug Fixed:** Products in "Curated by Nature" section were non-clickable
+
+**Root Cause:**
+- Hardcoded static data without navigation links
+- Invalid HTML nesting (`<Link>` inside `<motion.div>`) causing hydration errors
+- Missing `slug` properties for product identification
+
+**Solution Implemented:**
+1. Added `slug` property to all tea items in collection data
+2. Implemented `motion.create(Link)` pattern for hydration-safe animated links
+3. Updated all tabs (OriginTab, FermentTab, SeasonTab) to use `MotionLink`
+4. Synchronized seed_products.py with landing page display values
+
+**Files Modified:**
+- `frontend/components/sections/collection.tsx` (416 → 430 lines)
+- `backend/apps/commerce/management/commands/seed_products.py` (351 lines)
+
+**Verification:**
+- ✅ TypeScript: 0 errors
+- ✅ Build: Production successful
+- ✅ Navigation: Landing → Product detail pages working
+
+### Documentation Updates
+
+**Comprehensive Documentation Sync:**
+- Updated README.md with accurate file hierarchy (750 lines)
+- Updated GEMINI.md with correct technical details (150 lines)
+- Updated Project_Architecture_Document.md with complete structure (1,252 lines)
+- Created ACCOMPLISHMENTS.md with milestone tracking
+
+**Key Lessons Learned:**
+1. **Hydration Errors:** Use `motion.create(Link)` instead of wrapping `<Link>` inside `<motion.div>`
+2. **Data Consistency:** Ensure frontend hardcoded data matches database seeds
+3. **Documentation Sync:** Regular updates prevent drift from codebase
+
+See `ACCOMPLISHMENTS.md` for complete details.
 
 ---
 
@@ -3193,6 +3277,57 @@ npm test
 | Product Card | `frontend/components/product-card.tsx` |
 | API Functions | `frontend/lib/api/products.ts` |
 | Types | `frontend/lib/types/product.ts` |
+
+---
+
+## 🆕 Recent Changes (2026-04-20)
+
+### Hydration-Safe Animated Links
+
+**Pattern Implemented:** `motion.create(Link)`
+
+**Location:** `frontend/components/sections/collection.tsx`
+
+**Problem:** Invalid HTML nesting (`<Link>` inside `<motion.div>`) caused hydration errors:
+```
+Error: Hydration failed because the server rendered HTML didn't match the client.
++ <div> (server rendered)
+- <a> (client expected)
+```
+
+**Solution:**
+```typescript
+// Create animated Link component
+const MotionLink = motion.create(Link);
+
+// Usage in OriginTab, FermentTab, SeasonTab
+<MotionLink
+  href={`/products/${tea.slug}`}
+  variants={staggerItemVariants}
+  whileHover="hover"
+  className="..."
+>
+  {/* Card content */}
+</MotionLink>
+```
+
+**Benefits:**
+- Properly merges motion props with Next.js Link props
+- Maintains SSR compatibility (identical DOM structure)
+- Avoids hydration mismatches
+- Clean, declarative syntax
+
+**Files Modified:**
+- `frontend/components/sections/collection.tsx` (430 lines)
+- `backend/apps/commerce/management/commands/seed_products.py` (351 lines)
+
+### Updated Anti-Patterns Section
+
+Added to Section 12.2:
+```markdown
+11. **Never** wrap `<motion.div>` with `<Link>` - use `motion.create(Link)` instead
+12. **Never** forget `slug` properties in hardcoded product data
+```
 
 ---
 
