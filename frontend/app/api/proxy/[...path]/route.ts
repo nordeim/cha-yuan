@@ -1,6 +1,9 @@
 /**
  * BFF (Backend for Frontend) Proxy Route
  * Forwards requests to Django API with JWT authentication.
+ *
+ * NOTE: In Next.js 15+, `params` is a Promise that must be awaited.
+ * Ref: https://nextjs.org/docs/messages/sync-dynamic-apis
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -9,18 +12,33 @@ import { cookies } from "next/headers";
 // Backend API configuration
 const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:8000";
 
+// Define the new async context type for Next.js 15+
+type ProxyRouteContext = {
+  params: Promise<{ path: string[] }>;
+};
+
 /**
  * Handle all HTTP methods for the proxy route
  */
 export async function ALL(
   request: NextRequest,
-  { params }: { params: { path: string[] } }
+  context: ProxyRouteContext
 ): Promise<NextResponse> {
-  // Build target URL
-  const path = params.path.join("/");
-  const targetUrl = new URL(`/api/v1/${path}`, BACKEND_URL);
+  // Await params before accessing properties (Next.js 15+ requirement)
+  const { path } = await context.params;
 
-  // Copy query parameters
+  // Validate catch-all segment
+  if (!path?.length) {
+    return NextResponse.json(
+      { error: "Invalid proxy path" },
+      { status: 400 }
+    );
+  }
+
+  const pathString = path.join("/");
+  const targetUrl = new URL(`/api/v1/${pathString}`, BACKEND_URL);
+
+  // Copy query parameters from incoming request
   const searchParams = request.nextUrl.searchParams;
   searchParams.forEach((value, key) => {
     targetUrl.searchParams.append(key, value);
@@ -30,7 +48,7 @@ export async function ALL(
   const cookieStore = await cookies();
   const accessToken = cookieStore.get("access_token")?.value;
 
-  // Build headers
+  // Build headers with secure forwarding
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -55,7 +73,7 @@ export async function ALL(
   });
 
   try {
-    // Forward request to backend
+    // Build fetch options
     const fetchOptions: RequestInit = {
       method: request.method,
       headers,
@@ -69,7 +87,7 @@ export async function ALL(
       }
     }
 
-    // Make request to backend
+    // Forward request to backend
     const backendResponse = await fetch(targetUrl.toString(), fetchOptions);
 
     // Handle token refresh on 401
@@ -78,7 +96,7 @@ export async function ALL(
       const refreshed = await tryRefreshToken();
       if (refreshed) {
         // Retry request with new token
-        return retryRequest(request, params);
+        return retryRequest(request, context);
       }
     }
 
@@ -146,14 +164,16 @@ async function tryRefreshToken(): Promise<boolean> {
  */
 async function retryRequest(
   request: NextRequest,
-  params: { path: string[] }
+  context: ProxyRouteContext
 ): Promise<NextResponse> {
   // Get new token
   const cookieStore = await cookies();
   const newToken = cookieStore.get("access_token")?.value;
 
-  const path = params.path.join("/");
-  const targetUrl = new URL(`/api/v1/${path}`, BACKEND_URL);
+  // Await params (Next.js 15+ requirement)
+  const { path } = await context.params;
+  const pathString = path.join("/");
+  const targetUrl = new URL(`/api/v1/${pathString}`, BACKEND_URL);
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -190,5 +210,9 @@ async function retryRequest(
   });
 }
 
-// Export specific HTTP method handlers
-export { ALL as GET, ALL as POST, ALL as PUT, ALL as DELETE, ALL as PATCH };
+// Export individual methods that delegate to ALL handler
+export const GET = ALL;
+export const POST = ALL;
+export const PUT = ALL;
+export const DELETE = ALL;
+export const PATCH = ALL;

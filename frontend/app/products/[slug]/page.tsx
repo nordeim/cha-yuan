@@ -12,6 +12,7 @@ import { ProductGallery } from "@/components/product-gallery";
 import { RelatedProducts } from "@/components/related-products";
 import { GstBadge } from "@/components/gst-badge";
 import { Button } from "@/components/ui/button";
+import { AddToCartButton } from "@/components/add-to-cart-button";
 import {
   Leaf,
   MapPin,
@@ -170,16 +171,20 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
                 </div>
               )}
 
-              {/* Add to Cart Button */}
-              <div className="mt-auto pt-6 border-t border-ivory-300">
-                <Button
-                  size="lg"
-                  className="w-full md:w-auto"
-                  disabled={!product.is_in_stock}
-                >
-                  {product.is_in_stock ? "Add to Cart" : "Out of Stock"}
-                </Button>
-              </div>
+  {/* Add to Cart Button */}
+          <div className="mt-auto pt-6 border-t border-ivory-300">
+            {product.is_in_stock ? (
+              <AddToCartButton
+                productId={product.id}
+                size="lg"
+                className="w-full md:w-auto"
+              />
+            ) : (
+              <Button size="lg" className="w-full md:w-auto" disabled>
+                Out of Stock
+              </Button>
+            )}
+          </div>
             </div>
           </div>
         </div>
