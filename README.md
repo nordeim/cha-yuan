@@ -145,61 +145,57 @@ cha-yuan/
 ### System Architecture Diagram
 
 ```mermaid
-architectureDiagram
+architecture-beta
     %% User Layer
-    Person user "Customer"
+    group user_grp(cloud)["User Layer"]
+    service user_svc(user)["Customer"] in user_grp
 
     %% Client Layer
-    package "Client Layer" {
-        [Next.js 16 App Router] as next
-        [React 19 Components] as react
-        [Tailwind CSS v4] as tailwind
-        [Framer Motion] as motion
-    }
+    group client_grp(server)["Client Layer"]
+    service next_svc(react)["Next.js 16 App Router"] in client_grp
+    service react_svc(react)["React 19 Components"] in client_grp
+    service tailwind_svc(css)["Tailwind CSS v4"] in client_grp
+    service motion_svc(animation)["Framer Motion"] in client_grp
 
     %% BFF Layer
-    package "BFF Layer (Edge)" {
-        [BFF Proxy Route] as proxy
-        [JWT in HttpOnly Cookies] as jwt
-    }
+    group bff_grp(cloud)["BFF Layer (Edge)"]
+    service proxy_svc(server)["BFF Proxy Route"] in bff_grp
+    service jwt_svc(lock)["JWT in HttpOnly Cookies"] in bff_grp
 
     %% Backend Layer
-    package "Backend Layer" {
-        [Django 6] as django
-        [Django Ninja API] as ninja
-        [PyJWT Auth] as auth
-        [Curation Engine] as curation
-    }
+    group backend_grp(database)["Backend Layer"]
+    service django_svc(python)["Django 6"] in backend_grp
+    service ninja_svc(api)["Django Ninja API"] in backend_grp
+    service auth_svc(lock)["PyJWT Auth"] in backend_grp
+    service curation_svc(algorithm)["Curation Engine"] in backend_grp
 
     %% Data Layer
-    package "Data Layer" {
-        [PostgreSQL 17] as postgres
-        [Redis 7.4] as redis
-    }
+    group data_grp(database)["Data Layer"]
+    service postgres_svc(postgres)["PostgreSQL 17"] in data_grp
+    service redis_svc(redis)["Redis 7.4"] in data_grp
 
     %% External Services
-    package "External Services" {
-        [Stripe Singapore] as stripe
-        [Cloud Storage] as storage
-    }
+    group external_grp(cloud)["External Services"]
+    service stripe_svc(stripe)["Stripe Singapore"] in external_grp
+    service storage_svc(storage)["Cloud Storage"] in external_grp
 
     %% Connections
-    user --> next : "HTTPS"
-    next --> react : "Render"
-    react --> tailwind : "Style"
-    react --> motion : "Animate"
-    
-    next --> proxy : "/api/proxy/*"
-    proxy --> jwt : "Read/Write"
-    proxy --> ninja : "HTTP + JWT Header"
-    
-    ninja --> django : "Process"
-    ninja --> auth : "Validate"
-    django --> curation : "Curate"
-    
-    django --> postgres : "SQL"
-    django --> redis : "Cache/Sessions"
-    django --> stripe : "Payment"
+    user_svc:B -- T:next_svc
+    next_svc:R -- L:react_svc
+    react_svc:R -- L:tailwind_svc
+    react_svc:B -- T:motion_svc
+
+    next_svc{group}:B -- T:proxy_svc{group}
+    proxy_svc:R -- L:jwt_svc
+    proxy_svc{group}:B -- T:ninja_svc{group}
+
+    ninja_svc:R -- L:django_svc
+    ninja_svc:B -- T:auth_svc
+    django_svc:R -- L:curation_svc
+
+    django_svc{group}:B -- T:postgres_svc{group}
+    django_svc{group}:B -- T:redis_svc{group}
+    django_svc{group}:B -- T:stripe_svc{group}
 ```
 
 ### User Journey Flow
