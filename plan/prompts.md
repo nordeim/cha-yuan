@@ -2,6 +2,10 @@ please meticulously review and analyze @Project_Requirements_Document.md and @dr
 
 ---
 
+Please meticulously and criticlly review the following project documents against the current codebase and to have a deep understanding of the WHAT, WHY and HOW of the project and its codebase design and architecture. Then meticulously plan to create markdown file with an appropriate name to comprehensively save/document down your deep validated understanding of the project and its codebase. The comprehensive analysis/understanding document should be able to comrehensive initialize any new coding agent with the same deep validated understanding of the project and its codebase without having to do another round of deep code review.  @README.md @plan/MASTER_EXECUTION_PLAN.md @plan/status_8.md @plan/status_new.md @plan/Project_Requirements_Document.md
+
+---
+
 Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please think deeper and think harder to deeply and thoroughly explore systematically and meticulously how to re-imagine an awesome `README.md` for the new GitHub repo to host this project. Make sure the `README.md` is as attractive, comprehensive and informative to attract other contributors. Then meticulously create an implementation plan for the `README.md` with integrated checklist. Review and validate your implementation plan before proceeding meticulously to execute it.
 
 ---
