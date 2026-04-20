@@ -1351,6 +1351,57 @@ npm test
 
 ---
 
+## 🆕 Recent Changes (2026-04-20)
+
+### Hydration-Safe Animated Links
+
+**Pattern Implemented:** `motion.create(Link)`
+
+**Location:** `frontend/components/sections/collection.tsx`
+
+**Problem:** Invalid HTML nesting (`<Link>` inside `<motion.div>`) caused hydration errors:
+```
+Error: Hydration failed because the server rendered HTML didn't match the client.
++ <div> (server rendered)
+- <a> (client expected)
+```
+
+**Solution:**
+```typescript
+// Create animated Link component
+const MotionLink = motion.create(Link);
+
+// Usage in OriginTab, FermentTab, SeasonTab
+<MotionLink
+  href={`/products/${tea.slug}`}
+  variants={staggerItemVariants}
+  whileHover="hover"
+  className="..."
+>
+  {/* Card content */}
+</MotionLink>
+```
+
+**Benefits:**
+- Properly merges motion props with Next.js Link props
+- Maintains SSR compatibility (identical DOM structure)
+- Avoids hydration mismatches
+- Clean, declarative syntax
+
+**Files Modified:**
+- `frontend/components/sections/collection.tsx` (430 lines)
+- `backend/apps/commerce/management/commands/seed_products.py` (351 lines)
+
+### Updated Anti-Patterns Section
+
+Added to Section 12.2:
+```markdown
+11. **Never** wrap `<motion.div>` with `<Link>` - use `motion.create(Link)` instead
+12. **Never** forget `slug` properties in hardcoded product data
+```
+
+---
+
 *Document generated from meticulous codebase analysis*
 *Last updated: 2026-04-20 | Phase: 8 (Testing & Deployment)*
 *Version: 1.0.0*

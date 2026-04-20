@@ -19,6 +19,19 @@ Awesome meticulous job so far. Please keep up the good work. Now, please meticul
 
 ---
 
+Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously review and update @README.md , @AGENT_BRIEF.md , @CLAUDE.md , @docs/Project_Architecture_Document.md and @ACCOMPLISHMENTS.md with your major milestone achievements, include things like code changes (updates and additions), enhancements and fixes, lessons learned, troubleshooting guide, any blockers encountered (solved or still persist), any recommended next steps, etc.
+
+# Update the project documents with:
+- Major milestone achievements
+- Code changes (updates and additions)
+- Enhancements and fixes
+- Lessons learned
+- Troubleshooting guide
+- Blockers encountered (solved or persistent)
+- Recommended next steps
+
+---
+
 Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please think deeper and think harder to deeply and thoroughly explore systematically and meticulously how to re-imagine an awesome `README.md` for the new GitHub repo to host this project. Make sure the `README.md` is as attractive, comprehensive and informative to attract other contributors. Then meticulously create an implementation plan for the `README.md` with integrated checklist. Review and validate your implementation plan before proceeding meticulously to execute it.
 
 ---
