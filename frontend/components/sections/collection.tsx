@@ -13,8 +13,12 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
+// Create animated Link component for proper hydration compatibility
+// Ref: https://motion.dev/docs/react-motion-component
+const MotionLink = motion.create(Link);
+
 /* ============================================
-   COLLECTION SECTION
+COLLECTION SECTION
    Product tabs with tea cards
    Matches mockup exactly
    ============================================ */
@@ -30,6 +34,7 @@ const TABS: { id: TabId; label: string }[] = [
 const ORIGIN_TEAS = [
   {
     name: "Yunnan Pu'erh",
+    slug: "aged-puerh-2018",
     category: "Dark · Post-Fermented",
     description: "Earthy depth from ancient tea trees, 2019 vintage",
     price: 48,
@@ -39,6 +44,7 @@ const ORIGIN_TEAS = [
   },
   {
     name: "Longjing Dragon Well",
+    slug: "dragon-well-premium",
     category: "Green · Unoxidized",
     description: "Pan-fired sweetness from Hangzhou's West Lake",
     price: 62,
@@ -48,6 +54,7 @@ const ORIGIN_TEAS = [
   },
   {
     name: "Wuyi Rock Oolong",
+    slug: "tieguanyin-iron-goddess",
     category: "Oolong · Semi-Oxidized",
     description: "Mineral complexity from Fujian's cliff gardens",
     price: 55,
@@ -57,6 +64,7 @@ const ORIGIN_TEAS = [
   },
   {
     name: "Darjeeling First Flush",
+    slug: "darjeeling-first-flush",
     category: "Black · Fully Oxidized",
     description: "Muscatel floral notes from Himalayan slopes",
     price: 42,
@@ -71,14 +79,16 @@ const FERMENT_TEAS = [
     type: "White",
     sub: "Delicate · 0% Oxidation",
     name: "Silver Needle",
-    price: 58,
-    size: "30g",
+    slug: "silver-needle",
+    price: 48,
+    size: "50g",
     gradient: "from-tea-200 to-tea-400",
   },
   {
     type: "Green",
     sub: "Fresh · 0-5% Oxidation",
     name: "Dragon Well",
+    slug: "dragon-well-premium",
     price: 62,
     size: "40g",
     gradient: "from-tea-300 to-tea-500",
@@ -87,23 +97,26 @@ const FERMENT_TEAS = [
     type: "Oolong",
     sub: "Complex · 15-70%",
     name: "Tie Guan Yin",
-    price: 45,
-    size: "50g",
+    slug: "tieguanyin-iron-goddess",
+    price: 55,
+    size: "45g",
     gradient: "from-terra-300 to-terra-500",
   },
   {
     type: "Black",
     sub: "Rich · 100% Oxidation",
-    name: "Lapsang Souchong",
-    price: 38,
+    name: "Darjeeling First Flush",
+    slug: "darjeeling-first-flush",
+    price: 42,
     size: "50g",
     gradient: "from-terra-400 to-bark-700",
   },
   {
     type: "Pu'erh",
     sub: "Deep · Post-Fermented",
-    name: "Raw Pu'erh 2018",
-    price: 72,
+    name: "Yunnan Pu'erh",
+    slug: "aged-puerh-2018",
+    price: 48,
     size: "50g",
     gradient: "from-bark-700 to-bark-900",
   },
@@ -116,9 +129,9 @@ const SEASON_TEAS = [
     description: "First flush, delicate and vibrant. The most prized harvest of the year.",
     icon: "🌱",
     items: [
-      { name: "Dragon Well", price: 62 },
-      { name: "Bai Hao Yin Zhen", price: 58 },
-      { name: "Shincha", price: 54 },
+      { name: "Dragon Well", slug: "dragon-well-premium", price: 62 },
+      { name: "Silver Needle", slug: "silver-needle", price: 48 },
+      { name: "Sencha", slug: "sencha-first-flush", price: 22 },
     ],
     color: "tea",
   },
@@ -128,9 +141,9 @@ const SEASON_TEAS = [
     description: "Full-bodied and robust. Warm weather brings deeper flavor profiles.",
     icon: "☀️",
     items: [
-      { name: "Darjeeling 2nd", price: 38 },
-      { name: "Assam BOP", price: 28 },
-      { name: "Oriental Beauty", price: 66 },
+      { name: "Sun Moon Lake", slug: "sun-moon-lake-ruby", price: 28 },
+      { name: "Darjeeling First Flush", slug: "darjeeling-first-flush", price: 42 },
+      { name: "Oriental Beauty", slug: "oriental-beauty", price: 42 },
     ],
     color: "gold",
   },
@@ -140,9 +153,9 @@ const SEASON_TEAS = [
     description: "Rich and aromatic. Cool nights concentrate complex flavors in the leaf.",
     icon: "🍂",
     items: [
-      { name: "Tie Guan Yin", price: 45 },
-      { name: "Wuyi Rock", price: 55 },
-      { name: "Dian Hong", price: 35 },
+      { name: "Tie Guan Yin", slug: "tieguanyin-iron-goddess", price: 55 },
+      { name: "Wuyi Rock", slug: "tieguanyin-iron-goddess", price: 55 },
+      { name: "Alishan Oolong", slug: "alishan-high-mountain", price: 38 },
     ],
     color: "terra",
   },
@@ -152,9 +165,9 @@ const SEASON_TEAS = [
     description: "Warming and grounding. Aged teas and roasted oolongs for cozy moments.",
     icon: "❄️",
     items: [
-      { name: "Ripe Pu'erh", price: 48 },
-      { name: "Hojicha", price: 24 },
-      { name: "Chai Masala", price: 22 },
+      { name: "Yunnan Pu'erh", slug: "aged-puerh-2018", price: 48 },
+      { name: "Raw Pu'erh", slug: "raw-puerh-2024", price: 42 },
+      { name: "Alishan Oolong", slug: "alishan-high-mountain", price: 38 },
     ],
     color: "bark",
   },
@@ -170,13 +183,14 @@ function OriginTab() {
       animate="visible"
       className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
     >
-{ORIGIN_TEAS.map((tea) => (
-          <motion.div
-            key={tea.name}
-            variants={staggerItemVariants}
-            {...(!prefersReducedMotion && { whileHover: "hover" })}
-            className="group relative rounded-2xl overflow-hidden cursor-pointer bg-white border border-ivory-300 hover:border-gold-400 transition-all hover:shadow-lg"
-          >
+      {ORIGIN_TEAS.map((tea) => (
+        <MotionLink
+          key={tea.name}
+          href={`/products/${tea.slug}`}
+          variants={staggerItemVariants}
+          {...(!prefersReducedMotion && { whileHover: "hover" })}
+          className="group relative rounded-2xl overflow-hidden cursor-pointer bg-white border border-ivory-300 hover:border-gold-400 transition-all hover:shadow-lg block"
+        >
           {/* Image */}
           <div className="aspect-[3/4] overflow-hidden">
             <motion.div
@@ -219,7 +233,7 @@ function OriginTab() {
               <span className="text-xs text-bark-700/50">{tea.size}</span>
             </div>
           </div>
-        </motion.div>
+        </MotionLink>
       ))}
     </motion.div>
   );
@@ -234,10 +248,11 @@ function FermentTab() {
       className="grid grid-cols-1 md:grid-cols-5 gap-6"
     >
       {FERMENT_TEAS.map((tea) => (
-        <motion.div
+        <MotionLink
           key={tea.name}
+          href={`/products/${tea.slug}`}
           variants={staggerItemVariants}
-          className="text-center group cursor-pointer"
+          className="text-center group cursor-pointer block"
         >
           <div
             className={cn(
@@ -254,7 +269,7 @@ function FermentTab() {
           <p className="text-sm text-gold-500 font-medium mt-1">
             ${tea.price} / {tea.size}
           </p>
-        </motion.div>
+        </MotionLink>
       ))}
     </motion.div>
   );
@@ -310,10 +325,14 @@ function SeasonTab() {
           </p>
           <div className="space-y-2">
             {season.items.map((item) => (
-              <div key={item.name} className="flex justify-between text-sm">
+              <MotionLink
+                key={item.name}
+                href={`/products/${item.slug}`}
+                className="flex justify-between text-sm hover:bg-ivory-50 p-1 rounded cursor-pointer transition-colors"
+              >
                 <span className="text-bark-700/80">{item.name}</span>
                 <span className="text-gold-500 font-medium">${item.price}</span>
-              </div>
+              </MotionLink>
             ))}
           </div>
         </motion.div>
@@ -392,22 +411,22 @@ export function CollectionSection() {
           </motion.div>
         </AnimatePresence>
 
-        {/* View All Link */}
-        <motion.div
-          initial={prefersReducedMotion ? "visible" : "hidden"}
-          whileInView="visible"
-          viewport={{ once: true }}
-          variants={scrollRevealVariants}
-          className="text-center mt-12"
+  {/* View All Link */}
+      <motion.div
+        initial={prefersReducedMotion ? "visible" : "hidden"}
+        whileInView="visible"
+        viewport={{ once: true }}
+        variants={scrollRevealVariants}
+        className="text-center mt-12"
+      >
+        <Link
+          href="/products"
+          className="inline-flex items-center gap-2 text-gold-500 font-medium hover:text-gold-600 transition-colors group"
         >
-          <Link
-            href="#shop"
-            className="inline-flex items-center gap-2 text-gold-500 font-medium hover:text-gold-600 transition-colors group"
-          >
-            View Full Collection
-            <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </motion.div>
+          View Full Collection
+          <ArrowRight className="w-4 h-4 transition-transform group-hover:translate-x-1" />
+        </Link>
+      </motion.div>
       </div>
     </section>
   );

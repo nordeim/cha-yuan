@@ -175,18 +175,18 @@ class Command(BaseCommand):
         return origins
 
     def create_products(self, categories: dict, origins: dict) -> list:
-        """Create sample tea products."""
+        """Create sample tea products matching landing page display."""
         products_data = [
             # Green Teas
             {
-                "name": "Dragon Well (Longjing) - Premium",
+                "name": "Longjing Dragon Well",
                 "slug": "dragon-well-premium",
-                "description": "Flat-pressed leaves with chestnut aroma. Hangzhou's most famous green tea.",
+                "description": "Pan-fired sweetness from Hangzhou's West Lake. Flat-pressed leaves with chestnut aroma.",
                 "category": "green-tea",
                 "origin": "hangzhou-china",
-                "price_sgd": Decimal("28.00"),
+                "price_sgd": Decimal("62.00"),
                 "stock": 50,
-                "weight_grams": 100,
+                "weight_grams": 40,
                 "harvest_season": "spring",
                 "harvest_year": 2026,
             },
@@ -217,14 +217,14 @@ class Command(BaseCommand):
             },
             # Oolong Teas
             {
-                "name": "Tieguanyin - Iron Goddess",
+                "name": "Wuyi Rock Oolong",
                 "slug": "tieguanyin-iron-goddess",
-                "description": "Rolled oolong with orchid fragrance and creamy mouthfeel.",
+                "description": "Mineral complexity from Fujian's cliff gardens. Rolled oolong with orchid fragrance.",
                 "category": "oolong",
                 "origin": "fujian-china",
-                "price_sgd": Decimal("32.00"),
+                "price_sgd": Decimal("55.00"),
                 "stock": 40,
-                "weight_grams": 100,
+                "weight_grams": 45,
                 "harvest_season": "autumn",
                 "harvest_year": 2026,
             },
@@ -257,12 +257,12 @@ class Command(BaseCommand):
             {
                 "name": "Darjeeling First Flush",
                 "slug": "darjeeling-first-flush",
-                "description": "Spring harvest with floral notes and light golden liquor.",
+                "description": "Muscatel floral notes from Himalayan slopes. Spring harvest with light golden liquor.",
                 "category": "black-tea",
                 "origin": "darjeeling-india",
-                "price_sgd": Decimal("35.00"),
+                "price_sgd": Decimal("42.00"),
                 "stock": 30,
-                "weight_grams": 100,
+                "weight_grams": 50,
                 "harvest_season": "spring",
                 "harvest_year": 2026,
             },
@@ -305,16 +305,16 @@ class Command(BaseCommand):
             },
             # Pu-erh Teas
             {
-                "name": "Aged Pu-erh - 2018 Vintage",
+                "name": "Yunnan Pu'erh",
                 "slug": "aged-puerh-2018",
-                "description": "5-year aged ripe pu-erh with earthy smoothness and sweet finish.",
+                "description": "Earthy depth from ancient tea trees, 2019 vintage. Aged ripe pu-erh with smooth finish.",
                 "category": "puerh",
                 "origin": "yunnan-china",
-                "price_sgd": Decimal("58.00"),
+                "price_sgd": Decimal("48.00"),
                 "stock": 25,
-                "weight_grams": 200,
+                "weight_grams": 50,
                 "harvest_season": "autumn",
-                "harvest_year": 2018,
+                "harvest_year": 2019,
             },
             {
                 "name": "Raw Pu-erh Cake - 2024 Spring",

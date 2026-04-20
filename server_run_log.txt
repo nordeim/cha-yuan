@@ -1,0 +1,136 @@
+$ rm -rf .next/
+(venv) pete@pop-os:/home/project/tea-culture/cha-yuan/frontend
+$ npm run build
+
+> cha-yuan-frontend@1.0.0 build
+> next build
+
+⚠ turbopack.root should be absolute, using: /home/project/tea-culture/cha-yuan/frontend
+▲ Next.js 16.2.4 (Turbopack)
+
+  Creating an optimized production build ...
+✓ Compiled successfully in 36.2s
+✓ Finished TypeScript in 7.5s    
+✓ Collecting page data using 3 workers in 565ms    
+✓ Generating static pages using 3 workers (10/10) in 494ms
+✓ Finalizing page optimization in 15ms    
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ƒ /api/proxy/[...path]
+├ ○ /checkout
+├ ○ /checkout/cancel
+├ ○ /checkout/success
+├ ƒ /culture
+├ ƒ /culture/[slug]
+├ ○ /dashboard/subscription
+├ ƒ /products
+├ ƒ /products/[slug]
+├ ○ /quiz
+└ ○ /shop
+
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+(venv) pete@pop-os:/home/project/tea-culture/cha-yuan/frontend
+$ nohup npm run dev > /tmp/nextjs.log 2>&1 &
+[1] 234967
+(venv) pete@pop-os:/home/project/tea-culture/cha-yuan/frontend
+$ tail -f /tmp/nextjs.log
+> next dev --turbopack
+
+▲ Next.js 16.2.4 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.2.132:3000
+✓ Ready in 417ms
+⚠ turbopack.root should be absolute, using: /home/project/tea-culture/cha-yuan/frontend
+
+⚠ Slow filesystem detected. The benchmark took 233ms. If /home/project/tea-culture/cha-yuan/frontend/.next/dev is a network drive, consider moving it to a local folder.
+See more: https://nextjs.org/docs/app/guides/local-development
+○ Compiling / ...
+ GET / 200 in 4.3s (next.js: 3.9s, application-code: 422ms)
+ GET /products/aged-puerh-2018/ 200 in 1625ms (next.js: 1458ms, application-code: 168ms)
+ │ GET http://localhost:8000/api/v1/products/aged-pu.. 200 in 44ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/aged-pu.. 200 in 28ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /products/ 200 in 1123ms (next.js: 968ms, application-code: 155ms)
+ │ GET http://localhost:8000/api/v1/products/categor.. 404 in 64ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/ 200 in 77ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/origins/ 404 in 86ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ GET / 200 in 116ms (next.js: 6ms, application-code: 111ms)
+ GET /products/dragon-well-premium/ 200 in 150ms (next.js: 56ms, application-code: 94ms)
+ │ GET http://localhost:8000/api/v1/products/dragon-.. 200 in 42ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/dragon-.. 200 in 31ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /products/ 200 in 74ms (next.js: 6ms, application-code: 68ms)
+ │ GET http://localhost:8000/api/v1/products/ 200 in 28ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/categor.. 404 in 33ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/origins/ 404 in 33ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ GET / 200 in 116ms (next.js: 3ms, application-code: 112ms)
+ GET /products/tieguanyin-iron-goddess/ 200 in 153ms (next.js: 52ms, application-code: 100ms)
+ │ GET http://localhost:8000/api/v1/products/tieguan.. 200 in 52ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/tieguan.. 200 in 39ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /products/ 200 in 86ms (next.js: 5ms, application-code: 82ms)
+ │ GET http://localhost:8000/api/v1/products/ 200 in 28ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/origins/ 404 in 33ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/categor.. 404 in 36ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ GET / 200 in 120ms (next.js: 6ms, application-code: 114ms)
+ GET /products/darjeeling-first-flush/ 200 in 220ms (next.js: 43ms, application-code: 177ms)
+ │ GET http://localhost:8000/api/v1/products/darjeel.. 200 in 49ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/darjeel.. 200 in 36ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET / 200 in 104ms (next.js: 5ms, application-code: 99ms)
+ GET /products/aged-puerh-2018/ 200 in 131ms (next.js: 37ms, application-code: 94ms)
+ │ GET http://localhost:8000/api/v1/products/aged-pu.. 200 in 46ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/aged-pu.. 200 in 34ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /products/ 200 in 97ms (next.js: 5ms, application-code: 92ms)
+ │ GET http://localhost:8000/api/v1/products/ 200 in 26ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/categor.. 404 in 33ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/origins/ 404 in 33ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ GET / 200 in 143ms (next.js: 4ms, application-code: 140ms)
+ GET /products/tieguanyin-iron-goddess/ 200 in 132ms (next.js: 50ms, application-code: 82ms)
+ │ GET http://localhost:8000/api/v1/products/tieguan.. 200 in 36ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/tieguan.. 200 in 26ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+ GET /products/ 200 in 82ms (next.js: 4ms, application-code: 78ms)
+ │ GET http://localhost:8000/api/v1/products/origins/ 404 in 32ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/categor.. 404 in 35ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/ 200 in 38ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ GET /products/dragon-well-premium/ 200 in 181ms (next.js: 40ms, application-code: 141ms)
+ │ GET http://localhost:8000/api/v1/products/dragon-.. 200 in 41ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+ │ GET http://localhost:8000/api/v1/products/dragon-.. 200 in 31ms (cache skip)
+ │ │ Cache skipped reason: (auto no cache)
+
+
