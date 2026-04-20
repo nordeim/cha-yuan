@@ -1,0 +1,45 @@
+# CHA YUAN Frontend - Development Dockerfile
+# Node.js 20 + Next.js 16 + React 19
+
+FROM node:20-slim
+
+# Set environment variables
+ENV NODE_ENV=development \
+    NEXT_TELEMETRY_DISABLED=1 \
+    npm_config_loglevel=error
+
+# Set work directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git \
+    curl \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies
+RUN npm install
+
+# Copy project
+COPY . .
+
+# Create non-root user
+RUN groupadd -r chayuan && useradd -r -g chayuan chayuan && \
+    chown -R chayuan:chayuan /app
+
+# Switch to non-root user
+USER chayuan
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:3000/api/health || exit 1
+
+# Default command
+CMD ["npm", "run", "dev"]

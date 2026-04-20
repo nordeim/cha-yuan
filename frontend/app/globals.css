@@ -1,0 +1,349 @@
+@import "tailwindcss";
+
+/* ============================================
+   CHA YUAN (茶源) Design System
+   Tailwind CSS v4 - CSS-First Configuration
+   Theme: Serene Minimalism (from static mockup)
+   ============================================ */
+
+@theme {
+  /* ------------------------------------------
+     COLOR PALETTE - Exact from mockup
+     ------------------------------------------ */
+
+  /* Tea Colors (Green spectrum) */
+  --color-tea-50: #f4f7f1;
+  --color-tea-100: #e6ede0;
+  --color-tea-200: #cddbc2;
+  --color-tea-300: #a8c290;
+  --color-tea-400: #7da35e;
+  --color-tea-500: #5c8a4d;
+  --color-tea-600: #4a7040;
+  --color-tea-700: #3b5a34;
+  --color-tea-800: #31482c;
+  --color-tea-900: #2a3d26;
+  --color-tea-950: #141f12;
+
+  /* Ivory Colors (Cream/Paper texture) */
+  --color-ivory-50: #fdfbf7;
+  --color-ivory-100: #faf6ee;
+  --color-ivory-200: #f5f0e8;
+  --color-ivory-300: #ede5d8;
+  --color-ivory-400: #e0d4c3;
+  --color-ivory-500: #d1c1aa;
+
+  /* Terra Colors (Warm/Oolong tones) */
+  --color-terra-300: #d99068;
+  --color-terra-400: #c4724b;
+  --color-terra-500: #b5613f;
+  --color-terra-600: #a04e32;
+  --color-terra-700: #86402b;
+
+  /* Bark Colors (Dark brown) */
+  --color-bark-700: #4a3728;
+  --color-bark-800: #3d2b1f;
+  --color-bark-900: #2a1d14;
+
+  /* Gold Colors (Premium accents) */
+  --color-gold-300: #d4b96a;
+  --color-gold-400: #c5a55a;
+  --color-gold-500: #b8944d;
+  --color-gold-600: #a07e3c;
+
+  /* ------------------------------------------
+     TYPOGRAPHY - Elegant & Readable
+     ------------------------------------------ */
+  --font-display: "Playfair Display", "Noto Serif SC", Georgia, serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-serif: "Noto Serif", Georgia, serif;
+  --font-chinese: "Noto Serif SC", serif;
+
+  /* ------------------------------------------
+     EXTENDED SPACING - Generous Whitespace
+     ------------------------------------------ */
+  --spacing-18: 4.5rem;
+  --spacing-22: 5.5rem;
+  --spacing-30: 7.5rem;
+  --spacing-88: 22rem;
+  --spacing-128: 32rem;
+
+  /* ------------------------------------------
+     CUSTOM ANIMATIONS - From mockup
+     ------------------------------------------ */
+
+  /* fadeInUp - Content entrance */
+  --animate-fadeInUp: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* fadeIn - Simple fade */
+  --animate-fadeIn: fadeIn 1s ease forwards;
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* slideInLeft - From left */
+  --animate-slideInLeft: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  @keyframes slideInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-40px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  /* leafFloat - Floating leaf decoration */
+  --animate-leafFloat: leafFloat 4s ease-in-out infinite;
+  @keyframes leafFloat {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    50% {
+      transform: translateY(-12px) rotate(5deg);
+    }
+  }
+
+  /* steamRise - Steam animation for tea */
+  --animate-steamRise: steamRise 2.5s ease-in-out infinite;
+  @keyframes steamRise {
+    0% {
+      opacity: 0;
+      transform: translateY(0) scaleX(1);
+    }
+    50% {
+      opacity: 0.6;
+      transform: translateY(-20px) scaleX(1.2);
+    }
+    100% {
+      opacity: 0;
+      transform: translateY(-40px) scaleX(0.8);
+    }
+  }
+
+  /* Reveal animation for scroll */
+  --animate-reveal: reveal 0.9s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  @keyframes reveal {
+    from {
+      opacity: 0;
+      transform: translateY(25px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* ------------------------------------------
+     CUSTOM EASING - Refined Motion
+     ------------------------------------------ */
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-decelerate: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-accelerate: cubic-bezier(0.4, 0.0, 1.0, 1.0);
+  --ease-symmetric: cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+/* ============================================
+   BASE STYLES
+   ============================================ */
+@layer base {
+  * {
+    @apply border-ivory-300;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-ivory-100 text-bark-900 font-sans antialiased;
+    font-feature-settings: "liga" 1, "calt" 1;
+  }
+
+  /* Elegant serif for headings */
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+    letter-spacing: -0.02em;
+  }
+
+  /* Focus visible styles */
+  :focus-visible {
+    @apply outline-2 outline-tea-500 outline-offset-2;
+  }
+
+  /* Selection color */
+  ::selection {
+    @apply bg-tea-200 text-tea-900;
+  }
+}
+
+/* ============================================
+   CUSTOM UTILITIES - From mockup
+   ============================================ */
+@layer utilities {
+  /* Text balance for better typography */
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  /* Paper texture background - exact from mockup */
+  .paper-texture {
+    background-color: #faf6ee;
+    background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  }
+
+  /* Gold line divider */
+  .gold-line {
+    background: linear-gradient(to right, transparent, var(--color-gold-400), transparent);
+  }
+
+  /* Glass panels */
+  .glass-panel {
+    @apply bg-ivory-50/80 backdrop-blur-md border border-ivory-300/50;
+  }
+
+  .glass-panel-dark {
+    @apply bg-bark-900/80 backdrop-blur-md border border-bark-800;
+  }
+
+  /* Hero overlay gradients from mockup */
+  .hero-overlay {
+    background: linear-gradient(to right, rgba(42, 29, 20, 0.85) 0%, rgba(42, 29, 20, 0.6) 40%, rgba(42, 29, 20, 0.2) 70%, transparent 100%);
+  }
+
+  .hero-overlay-mobile {
+    background: linear-gradient(to top, rgba(42, 29, 20, 0.9) 0%, rgba(42, 29, 20, 0.5) 50%, rgba(42, 29, 20, 0.3) 100%);
+  }
+
+  /* Section spacing */
+  .section-spacing {
+    @apply py-24 md:py-32;
+  }
+
+  /* Container with generous padding */
+  .container-chayuan {
+    @apply mx-auto px-6 lg:px-8 max-w-7xl;
+  }
+
+  /* Animation delay utilities */
+  .delay-100 {
+    animation-delay: 100ms;
+  }
+  .delay-200 {
+    animation-delay: 200ms;
+  }
+  .delay-300 {
+    animation-delay: 300ms;
+  }
+  .delay-400 {
+    animation-delay: 400ms;
+  }
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+  .delay-600 {
+    animation-delay: 600ms;
+  }
+
+  /* Scrollbar styling */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: #faf6ee;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #c5a55a;
+    border-radius: 4px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #b8944d;
+  }
+}
+
+/* ============================================
+   COMPONENT UTILITIES
+   ============================================ */
+@utility btn {
+  @apply inline-flex items-center justify-center gap-2 rounded-full font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-tea-500 disabled:pointer-events-none disabled:opacity-50 active:scale-[0.97];
+}
+
+@utility btn-primary {
+  @apply btn bg-tea-600 text-white hover:bg-tea-700;
+}
+
+@utility btn-secondary {
+  @apply btn bg-ivory-200 text-bark-900 hover:bg-ivory-300;
+}
+
+@utility btn-outline {
+  @apply btn border-2 border-ivory-400 bg-transparent text-bark-900 hover:bg-ivory-100;
+}
+
+@utility btn-ghost {
+  @apply btn bg-transparent text-bark-700 hover:bg-ivory-100;
+}
+
+@utility btn-gold {
+  @apply btn bg-gold-500 text-bark-900 hover:bg-gold-400;
+}
+
+@utility card {
+  @apply rounded-2xl bg-white border border-ivory-300;
+}
+
+@utility card-hover {
+  @apply card transition-all duration-300 hover:shadow-lg hover:border-gold-400;
+}
+
+@utility input-base {
+  @apply flex h-11 w-full rounded-xl border border-ivory-400 bg-white px-5 py-2 text-sm text-bark-900 placeholder:text-bark-700/40 focus:outline-none focus:border-gold-400 focus:ring-2 focus:ring-gold-400/20 disabled:cursor-not-allowed disabled:opacity-50 transition-all;
+}
+
+/* ============================================
+   ACCESSIBILITY - Reduced Motion
+   ============================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================
+   GLOBAL SCROLLBAR - Match mockup
+   ============================================ */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #faf6ee;
+}
+::-webkit-scrollbar-thumb {
+  background: #c5a55a;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #b8944d;
+}

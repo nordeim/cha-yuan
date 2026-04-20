@@ -1,0 +1,41 @@
+# CHA YUAN - Coverage Configuration
+# Target: 85% minimum coverage
+
+[run]
+source = apps
+branch = True
+omit = 
+    */tests/*
+    */migrations/*
+    */admin.py
+    */apps.py
+    manage.py
+    */settings/*
+    */wsgi.py
+    */asgi.py
+    */urls.py
+
+disable_warnings =
+    couldnt-parse
+
+[report]
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+
+precision = 2
+show_missing = True
+skip_covered = False
+
+[html]
+directory = reports/coverage
+
+[xml]
+output = reports/coverage.xml
+
+[json]
+output = reports/coverage.json
