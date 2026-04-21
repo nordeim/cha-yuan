@@ -17,10 +17,10 @@ import { cn } from "@/lib/utils";
    ============================================ */
 
 const NAV_ITEMS = [
-  { href: "#philosophy", label: "Philosophy" },
-  { href: "#collection", label: "Collection" },
-  { href: "#culture", label: "Tea Culture" },
-  { href: "#subscribe", label: "Subscribe" },
+  { href: "/#philosophy", label: "Philosophy" },
+  { href: "/#collection", label: "Collection" },
+  { href: "/#culture", label: "Tea Culture" },
+  { href: "/#subscribe", label: "Subscribe" },
 ] as const;
 
 export function Navigation() {
@@ -118,10 +118,10 @@ return (
                 {item.label}
               </Link>
             ))}
-            <Link
-              href="#shop"
-              className="relative inline-flex items-center gap-2 bg-bark-800 text-ivory-100 px-6 py-2.5 rounded-full text-sm font-medium tracking-wide hover:bg-bark-900 transition-all active:scale-[0.97]"
-            >
+              <Link
+                href="/#shop"
+                className="relative inline-flex items-center gap-2 bg-bark-800 text-ivory-100 px-6 py-2.5 rounded-full text-sm font-medium tracking-wide hover:bg-bark-900 transition-all active:scale-[0.97]"
+              >
               <ShoppingBag className="w-4 h-4 text-gold-400" />
               Shop
             </Link>
@@ -169,11 +169,11 @@ return (
                   {item.label}
                 </Link>
               ))}
-              <Link
-                href="#shop"
-                onClick={closeMobileMenu}
-                className="inline-flex items-center gap-2 bg-bark-800 text-ivory-100 px-6 py-3 rounded-full text-sm font-medium mt-2"
-              >
+            <Link
+              href="/#shop"
+              onClick={closeMobileMenu}
+              className="inline-flex items-center gap-2 bg-bark-800 text-ivory-100 px-6 py-3 rounded-full text-sm font-medium mt-2"
+            >
                 <ShoppingBag className="w-4 h-4 text-gold-400" />
                 Visit Shop
               </Link>
