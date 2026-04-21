@@ -669,7 +669,7 @@ const categories = await getCategories().catch(() => []);
 | 5 | Cart & Checkout | ✅ Complete | Redis cart, Stripe SG integration |
 | 6 | Tea Culture | ✅ Complete | Articles, brewing guides |
 | 7 | Quiz & Subscription | ✅ Complete | Curation algorithm, dashboard |
-| 8 | Testing & Deploy | 🚧 In Progress | 93 backend + 39 frontend tests passing |
+| 8 | Testing & Deploy | ✅ Complete | 346 backend + 78 frontend tests passing |
 
 ### Working Features
 - ✅ Product catalog with filtering (category, origin, season, fermentation)

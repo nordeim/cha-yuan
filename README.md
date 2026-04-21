@@ -304,7 +304,7 @@ flowchart TB
 | **5** | Cart & Checkout | ✅ Complete | Redis cart, cookie persistence, Stripe SG |
 | **6** | Tea Culture Content | ✅ Complete | Articles, markdown rendering |
 | **7** | Quiz & Subscription | ✅ Complete | Curation algorithm, dashboard |
-| **8** | Testing & Deployment | ✅ Complete | 346 backend + 39 frontend tests passing |
+| **8** | Testing & Deployment | ✅ Complete | 346 backend + 78 frontend tests passing |
 
 ### Core Features
 
@@ -312,11 +312,14 @@ flowchart TB
 - 🛍️ **Product Catalog**: Filter by category, origin, fermentation level, season
 - 📝 **Preference Quiz**: Weighted scoring algorithm for personalized recommendations
 - 🎁 **Subscription Service**: Monthly curated boxes with 60/30/10 curation algorithm
-- 🛒 **Shopping Cart**: Redis-backed persistent cart (30-day TTL)
+- 🛒 **Shopping Cart**: Redis-backed persistent cart (30-day TTL) with dedicated cart page
 - 💳 **Stripe Checkout**: Singapore integration (SGD, GrabPay, PayNow)
+- 🔐 **Authentication**: Login and registration with password complexity validation
+- 🏢 **Company Pages**: About, Sustainability, Partners, Contact, Wholesale
 - 📚 **Tea Culture Content**: Markdown articles with brewing guides
 - 👤 **User Dashboard**: Subscription management, order history, preferences
 - 🎨 **Eastern Design**: Tea brand colors, Playfair Display typography, paper textures
+- 🛡️ **PDPA Compliance**: Singapore data protection consent tracking
 
 ---
 
@@ -416,8 +419,8 @@ npm run test:e2e:ui      # Playwright with UI
 
 ### Test Coverage
 
-- **Backend**: 93+ tests passing (pytest)
-- **Frontend Unit**: 39 tests passing (Vitest)
+- **Backend**: 346+ tests passing (pytest)
+- **Frontend Unit**: 78 tests passing (Vitest, 9 test files)
 - **E2E**: Critical user journeys (Playwright)
 
 ---

@@ -54,8 +54,11 @@
 | Component | Status | Details |
 |-----------|--------|---------|
 | **Backend Tests** | ✅ 346 passing | pytest with cart cookie tests |
-| **Frontend Tests** | ✅ 39 passing | Vitest + Playwright |
+| **Frontend Tests** | ✅ 78 passing | Vitest + Playwright |
 | **TypeScript** | ✅ Strict mode | 0 errors |
+| **Add to Cart** | ✅ Fixed | Product detail page cart button working |
+| **Navigation** | ✅ Complete | Cart icon, Shop link, absolute paths |
+| **Auth Pages** | ✅ Complete | Login + Register with password complexity |
 | **Cart API** | ✅ Fixed | 401 errors resolved, cookie persistence working |
 | **BFF Proxy** | ✅ Fixed | Trailing slash handling for POST/PUT/DELETE |
 | **Authentication** | ✅ Complete | JWT + HttpOnly cookies, AnonymousUser pattern |
@@ -474,7 +477,10 @@ const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL);
 │ │ │ └── 📄 page.tsx              # Redirects to /products
 │ │ │
 │ │ ├── 📁 auth/
-│ │ │ └── 📄 (login/signup pages)
+│ │ │ ├── 📁 login/
+│ │ │ │ └── 📄 page.tsx # Login with returnTo handling
+│ │ │ └── 📁 register/
+│ │ │ └── 📄 page.tsx # Registration with password complexity
 │ │ │
 │ │ ├── 📄 layout.tsx              # Root layout
 │ │ ├── 📄 page.tsx                # Home page
@@ -482,13 +488,14 @@ const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL);
 │ │ └── 📄 providers.tsx           # QueryClientProvider
 │ │
 │ ├── 📁 components/               # React Components
-│ │ ├── 📁 ui/                     # shadcn primitives
+│ │ ├── 📁 ui/ # shadcn primitives
 │ │ │ ├── 📄 button.tsx
 │ │ │ ├── 📄 input.tsx
 │ │ │ ├── 📄 label.tsx
 │ │ │ ├── 📄 sheet.tsx
 │ │ │ ├── 📄 scroll-area.tsx
-│ │ │ └── 📄 separator.tsx
+│ │ │ ├── 📄 separator.tsx
+│ │ │ └── 📄 checkbox.tsx # NEW - Radix-based checkbox
 │ │ │
 │ │ ├── 📁 sections/               # Page sections
 │ │ │ ├── 📄 hero.tsx
@@ -1216,6 +1223,25 @@ class Subscription(models.Model):
 | `/api/v1/subscriptions/cancel/` | POST | Required | Cancel subscription |
 | `/api/v1/subscriptions/pause/` | POST | Required | Pause subscription |
 | `/api/v1/subscriptions/resume/` | POST | Required | Resume subscription |
+
+### 8.4 Authentication Endpoints (Public)
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/auth/login/` | POST | Login with email/password (sets HttpOnly cookies) |
+| `/api/v1/auth/register/` | POST | Register new account with PDPA consent (sets HttpOnly cookies) |
+| `/api/v1/auth/logout/` | POST | Logout (clears cookies) |
+| `/api/v1/auth/refresh/` | POST | Refresh access token |
+| `/api/v1/auth/me/` | GET | Get current user profile (JWT required) |
+
+**Register Endpoint Fields:**
+- `email` (required): Valid email address
+- `password` (required): 8+ chars, upper, lower, number, special
+- `first_name` (required): User's first name
+- `last_name` (required): User's last name
+- `phone` (required): Singapore format (+65 XXXX XXXX)
+- `postal_code` (required): 6-digit postal code
+- `pdpa_consent` (required): Boolean, must be true
 
 ---
 
