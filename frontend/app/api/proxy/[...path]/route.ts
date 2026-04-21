@@ -107,12 +107,23 @@ export async function ALL(
       statusText: backendResponse.statusText,
     });
 
-    // Copy response headers (excluding sensitive ones)
-    backendResponse.headers.forEach((value, key) => {
-      if (!["set-cookie", "content-encoding"].includes(key.toLowerCase())) {
-        response.headers.set(key, value);
-      }
-    });
+// Copy response headers (excluding sensitive ones)
+  backendResponse.headers.forEach((value, key) => {
+    const lowerKey = key.toLowerCase();
+
+    if (lowerKey === "set-cookie") {
+      // Forward cart_id cookie specifically for cart persistence
+      // Auth cookies (access_token, refresh_token) remain protected
+      const cookies = value.split(",");
+      cookies.forEach((cookie) => {
+        if (cookie.trim().startsWith("cart_id=")) {
+          response.headers.append("set-cookie", cookie.trim());
+        }
+      });
+    } else if (lowerKey !== "content-encoding") {
+      response.headers.set(key, value);
+    }
+  });
 
     // Set cache headers
     response.headers.set("Cache-Control", "private, no-store");

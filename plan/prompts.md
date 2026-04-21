@@ -33,6 +33,35 @@ Awesome job on your meticulous analysis, planning and execution. Please keep up 
 
 ---
 
+awesome meticulous job on your review, analysis and planning. please keep up the good work. yes, please meticulously plan to create a detailed remediation plan with a ToDo list to re-validate carefully and systematically the below P0 issues to identify the actual root cause and the optimal fix while preserving the overall functionalities of the app, then plan to apply the validated optimal fixes. review and validate your remediation plan against the codebase again to ensure correct alignment before proceeding to execute it meticulously. remember to use the Test-Driven Development (TDD) approach to make the changes. 
+
+To create a detailed remediation plan with a ToDo list to systematically fix the P0 issues. Action list:
+1. Create a detailed remediation plan with ToDo list
+2. Re-validate the P0 issues to identify actual root cause
+3. Plan optimal fixes while preserving functionality
+4. Review and validate the remediation plan against the codebase
+5. Use TDD approach
+6. Execute the fixes meticulously
+
+
+--
+
+Please meticulously and criticlly review the following project documents against the current codebase and to have a deep understanding of the WHAT, WHY and HOW of the project and its codebase design and architecture. Then meticulously plan to create markdown file with an appropriate name to comprehensively save/document down your deep validated understanding of the project and its codebase. The comprehensive analysis/understanding document should be able to comrehensive initialize any new coding agent with the same deep validated understanding of the project and its codebase without having to do another round of deep code review. @README.md , @PROJECT_ANALYSIS_AND_KNOWLEDGE_BASE.md , @code_review_audit_report.md and @docs/MASTER_EXECUTION_PLAN.md 
+
+To conduct a thorough deep-dive into the actual codebase to validate the documentation against reality, then create a comprehensive knowledge base document.
+# Todos
+- Deep-dive backend codebase: api_registry.py, authentication.py, cart.py, curation.py, models.py, settings, urls
+- Deep-dive frontend codebase: BFF proxy, auth-fetch, globals.css, key pages, components, lib
+- Deep-dive infrastructure: docker-compose, Dockerfiles, pytest.ini, package.json
+- Cross-reference docs against codebase findings, identify discrepancies
+- Write comprehensive CODEBASE_GROUND_TRUTH.md document
+
+---
+
+your last tool call failed. please try again and then meticulously continue with your planned task list.
+
+---
+
 when I ask you to update with validated changes, do not delete any existing file content that are not related and are still valid after review.
 
 Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously plan to systematically review and update @GEMINI.md to make it more useful and informative as well as more accurately aligned with the current codebase with the recent changes, include key troubleshooting tips and lessons learnt.

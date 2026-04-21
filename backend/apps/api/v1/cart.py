@@ -220,8 +220,9 @@ def add_item_to_cart(request: HttpRequest, data: AddToCartRequestSchema):
     Add item to cart.
 
     If item already exists, increments quantity.
+    Sets cart_id cookie for new anonymous sessions.
     """
-    cart_id = get_cart_id_from_request(request)
+    cart_id, is_new = get_cart_id_from_request(request)
     cart_service = get_cart_service()
 
     try:
@@ -229,7 +230,8 @@ def add_item_to_cart(request: HttpRequest, data: AddToCartRequestSchema):
     except ValueError as e:
         raise HttpError(400, str(e))
 
-    return get_cart_response(cart_id)
+    data = get_cart_response(cart_id)
+    return create_cart_response(data, cart_id, is_new)
 
 
 @router.put("/update/", response=CartResponseSchema, auth=JWTAuth(required=False))
@@ -238,8 +240,9 @@ def update_cart_item_quantity(request: HttpRequest, data: UpdateCartRequestSchem
     Update item quantity in cart.
 
     Set quantity to 0 to remove item.
+    Sets cart_id cookie for new anonymous sessions.
     """
-    cart_id = get_cart_id_from_request(request)
+    cart_id, is_new = get_cart_id_from_request(request)
     cart_service = get_cart_service()
 
     try:
@@ -249,7 +252,8 @@ def update_cart_item_quantity(request: HttpRequest, data: UpdateCartRequestSchem
     except ValueError as e:
         raise HttpError(400, str(e))
 
-    return get_cart_response(cart_id)
+    data = get_cart_response(cart_id)
+    return create_cart_response(data, cart_id, is_new)
 
 
 @router.delete(
@@ -260,8 +264,9 @@ def remove_item_from_cart(request: HttpRequest, product_id: int):
     Remove item from cart.
 
     Idempotent - succeeds even if item not in cart.
+    Sets cart_id cookie for new anonymous sessions.
     """
-    cart_id = get_cart_id_from_request(request)
+    cart_id, is_new = get_cart_id_from_request(request)
     cart_service = get_cart_service()
 
     cart_service["remove_from_cart"](cart_id, product_id)
@@ -277,7 +282,7 @@ def clear_cart_contents(request: HttpRequest):
 
     Removes all items from cart.
     """
-    cart_id = get_cart_id_from_request(request)
+    cart_id, is_new = get_cart_id_from_request(request)
     cart_service = get_cart_service()
 
     cart_service["clear_cart"](cart_id)
