@@ -3,24 +3,26 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Leaf, ShoppingBag, Menu, X } from "lucide-react";
-import { useReducedMotion } from "../../lib/hooks/use-reduced-motion";
+import { Leaf, Menu, X, ShoppingCart } from "lucide-react";
+import { useReducedMotion } from "@/lib/hooks/use-reduced-motion";
 import {
   navbarVariants,
   mobileMenuVariants,
 } from "@/lib/animations";
 import { cn } from "@/lib/utils";
+import { useCart } from "@/lib/hooks/use-cart";
 
 /* ============================================
-   NAVIGATION - Fixed header with mobile menu
-   Matches mockup exactly
-   ============================================ */
+NAVIGATION - Fixed header with mobile menu
+Updated: Shop as normal link, Cart icon added
+============================================ */
 
 const NAV_ITEMS = [
   { href: "/#philosophy", label: "Philosophy" },
   { href: "/#collection", label: "Collection" },
   { href: "/#culture", label: "Tea Culture" },
   { href: "/#subscribe", label: "Subscribe" },
+  { href: "/products", label: "Shop" },
 ] as const;
 
 export function Navigation() {
@@ -28,6 +30,10 @@ export function Navigation() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  
+  // Cart data for badge
+  const { cart, isLoading } = useCart();
+  const cartItemCount = cart?.item_count ?? 0;
 
   // Handle scroll for navbar background
   useEffect(() => {
@@ -72,7 +78,7 @@ export function Navigation() {
     return null;
   }
 
-return (
+  return (
     <motion.nav
       {...(!prefersReducedMotion && {
         initial: "top",
@@ -82,8 +88,8 @@ return (
       className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
         isScrolled
-        ? "bg-ivory-50/95 backdrop-blur-xl shadow-sm"
-        : "bg-transparent"
+          ? "bg-ivory-50/95 backdrop-blur-xl shadow-sm"
+          : "bg-transparent"
       )}
     >
       <div className="container-chayuan">
@@ -118,30 +124,61 @@ return (
                 {item.label}
               </Link>
             ))}
-              <Link
-                href="/#shop"
-                className="relative inline-flex items-center gap-2 bg-bark-800 text-ivory-100 px-6 py-2.5 rounded-full text-sm font-medium tracking-wide hover:bg-bark-900 transition-all active:scale-[0.97]"
-              >
-              <ShoppingBag className="w-4 h-4 text-gold-400" />
-              Shop
+            
+            {/* Cart Icon */}
+            <Link
+              href="/cart"
+              className="relative inline-flex items-center justify-center w-10 h-10 rounded-full bg-ivory-200 hover:bg-ivory-300 transition-colors"
+              aria-label="Shopping cart"
+            >
+              <ShoppingCart className="w-5 h-5 text-bark-700" />
+              {/* Cart Count Badge */}
+              {!isLoading && cartItemCount > 0 && (
+                <span 
+                  data-testid="cart-count"
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-tea-600 text-white text-xs font-semibold rounded-full flex items-center justify-center"
+                >
+                  {cartItemCount > 9 ? "9+" : cartItemCount}
+                </span>
+              )}
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
-          <button
-            type="button"
-            onClick={toggleMobileMenu}
-            className="md:hidden w-10 h-10 flex items-center justify-center rounded-full hover:bg-ivory-300 transition-colors"
-            aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
-            aria-expanded={isMobileMenuOpen}
-            aria-controls="mobile-menu"
-          >
-            {isMobileMenuOpen ? (
-              <X className="w-6 h-6 text-bark-800" />
-            ) : (
-              <Menu className="w-6 h-6 text-bark-800" />
-            )}
-          </button>
+          {/* Mobile: Cart + Menu Button */}
+          <div className="flex items-center gap-2 md:hidden">
+            {/* Mobile Cart Icon */}
+            <Link
+              href="/cart"
+              className="relative inline-flex items-center justify-center w-10 h-10 rounded-full hover:bg-ivory-300 transition-colors"
+              aria-label="Shopping cart"
+            >
+              <ShoppingCart className="w-5 h-5 text-bark-700" />
+              {/* Mobile Cart Count Badge */}
+              {!isLoading && cartItemCount > 0 && (
+                <span 
+                  data-testid="cart-count-mobile"
+                  className="absolute -top-1 -right-1 w-5 h-5 bg-tea-600 text-white text-xs font-semibold rounded-full flex items-center justify-center"
+                >
+                  {cartItemCount > 9 ? "9+" : cartItemCount}
+                </span>
+              )}
+            </Link>
+            
+            <button
+              type="button"
+              onClick={toggleMobileMenu}
+              className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-ivory-300 transition-colors"
+              aria-label={isMobileMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-menu"
+            >
+              {isMobileMenuOpen ? (
+                <X className="w-6 h-6 text-bark-800" />
+              ) : (
+                <Menu className="w-6 h-6 text-bark-800" />
+              )}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -169,14 +206,6 @@ return (
                   {item.label}
                 </Link>
               ))}
-            <Link
-              href="/#shop"
-              onClick={closeMobileMenu}
-              className="inline-flex items-center gap-2 bg-bark-800 text-ivory-100 px-6 py-3 rounded-full text-sm font-medium mt-2"
-            >
-                <ShoppingBag className="w-4 h-4 text-gold-400" />
-                Visit Shop
-              </Link>
             </div>
           </motion.div>
         )}

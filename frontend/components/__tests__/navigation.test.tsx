@@ -13,6 +13,24 @@ vi.mock("@/lib/hooks/use-reduced-motion", () => ({
   useReducedMotion: () => false,
 }));
 
+// Mock useCart hook
+vi.mock("@/lib/hooks/use-cart", () => ({
+  useCart: () => ({
+    cart: undefined,
+    isLoading: false,
+    error: null,
+    itemCount: 0,
+    totalItems: 0,
+    subtotal: "0.00",
+    gstAmount: "0.00",
+    total: "0.00",
+    addItem: { mutate: vi.fn(), isPending: false },
+    updateItem: { mutate: vi.fn(), isPending: false },
+    removeItem: { mutate: vi.fn(), isPending: false },
+    clear: { mutate: vi.fn(), isPending: false },
+  }),
+}));
+
 // Mock Next.js Link to capture href values
 const mockHrefValues: string[] = [];
 vi.mock("next/link", () => ({
@@ -102,20 +120,21 @@ describe("Navigation", () => {
       });
     });
 
-    it("shop link should use absolute path /#shop", () => {
+    it("shop link should use /products path", () => {
       render(<Navigation />);
 
-      const shopLinkFound = mockHrefValues.some((href) => href === "/#shop");
+      // Shop now points to /products as a normal link
+      const shopLinkFound = mockHrefValues.some((href) => href === "/products");
       expect(
         shopLinkFound,
-        `Expected shop link to use /#shop, but found ${JSON.stringify(mockHrefValues)}`
+        `Expected shop link to use /products, but found ${JSON.stringify(mockHrefValues)}`
       ).toBe(true);
 
-      // Should NOT use relative #shop
-      const relativeShopFound = mockHrefValues.some((href) => href === "#shop");
+      // Should NOT use old /#shop anchor
+      const oldShopFound = mockHrefValues.some((href) => href === "/#shop");
       expect(
-        relativeShopFound,
-        `Shop link should NOT use relative #shop. Found ${JSON.stringify(mockHrefValues)}`
+        oldShopFound,
+        `Shop link should NOT use old /#shop. Found ${JSON.stringify(mockHrefValues)}`
       ).toBe(false);
     });
   });
