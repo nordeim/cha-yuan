@@ -1,12 +1,12 @@
 ---
-IMPORTANT: This file provides project-specific context for Claude Code agents.
-Read fresh for every conversation. Updated: 2026-04-20
-project: cha-yuan
-version: 1.0.0
-phase: 8 (Testing & Deployment)
+IMPORTANT: File is read fresh for every conversation. This document contains deep, validated understanding of the CHA YUAN codebase.
+Updated: 2026-04-21
+Project: cha-yuan (Premium Tea E-Commerce Platform for Singapore)
+Phase: 8 (Testing & Deployment)
+Version: 1.1.0
 ---
 
-# CHA YUAN (茶源) - AI Agent Briefing
+# CHA YUAN (茶源) - Comprehensive Agent Brief
 
 **Premium Tea E-Commerce Platform for Singapore**
 
@@ -16,186 +16,398 @@ phase: 8 (Testing & Deployment)
 
 CHA YUAN (茶源) is a premium tea e-commerce platform exclusively designed for the Singapore market. The platform bridges Eastern tea heritage with modern lifestyle commerce through a sophisticated subscription model powered by a preference-based curation algorithm.
 
-**Problem Solved**: Consumers face overwhelming tea selections without guidance, quality uncertainty, and lack of personalized recommendations.
+### Problem Solved
+- **Overwhelming Selection**: Consumers face hundreds of tea varieties without guidance
+- **Quality Uncertainty**: Origin authenticity and harvest quality are hard to verify
+- **Personalization Gap**: No tailored recommendations based on taste preferences
+- **Singapore Market Needs**: Local GST compliance (9%), SGD pricing, regional delivery
 
-**Solution**: 
-- One-time preference quiz with weighted scoring
-- Monthly curated tea boxes based on preferences + season
-- Educational content (brewing guides, tasting notes)
-- Singapore-compliant (GST 9%, SGD, PDPA)
+### Solution
+- ✨ **Preference Quiz**: One-time onboarding quiz determines tea preferences using weighted scoring
+- 🎯 **Curated Subscription**: Monthly tea boxes automatically curated based on preferences + season
+- 📚 **Educational Content**: Brewing guides, tasting notes, and tea culture articles
+- 🇸🇬 **Singapore-Ready**: GST-inclusive pricing, local address format, PDPA compliance
 
 ---
 
-## 🏗️ Architecture Overview
+## 🏗️ Technical Architecture
 
+### System Architecture Overview
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        CHA YUAN ARCHITECTURE                     │
+│ CHA YUAN ARCHITECTURE                                           │
 ├─────────────────────────────────────────────────────────────────┤
 │                                                                  │
-│  ┌──────────────┐         ┌──────────────────────────────┐  │
-│  │   FRONTEND   │────────▶│         BACKEND               │  │
-│  │              │  BFF    │                              │  │
-│  │ Next.js 16   │────────▶│ Django 6 + Ninja API        │  │
-│  │ React 19     │ /api/   │                              │  │
-│  │ Tailwind v4  │ Proxy   │ PostgreSQL 17 | Redis 7.4    │  │
-│  └──────────────┘         └──────────────────────────────┘  │
-│         │                           │                         │
-│         └───────────────────────────┘                         │
-│                    JWT + HttpOnly Cookies                     │
+│ ┌──────────────┐ ┌──────────────────────────────┐            │
+│ │ FRONTEND     │────────▶│ BACKEND                     │            │
+│ │              │ BFF    │ Django 6 + Ninja API         │            │
+│ │ Next.js 16   │────────▶│                             │            │
+│ │ React 19     │ /api/  │ PostgreSQL 17 | Redis 7.4   │            │
+│ │ Tailwind v4  │ Proxy  │                             │            │
+│ └──────────────┘ └──────────────────────────────┘            │
+│          │                                              │
+│ └───────────────────────────┘                              │
+│ JWT + HttpOnly Cookies                                     │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### Tech Stack
-
 | Layer | Technology | Version | Purpose |
 |-------|-----------|---------|---------|
-| **Frontend** | Next.js | 16.2.3+ | App Router, Server Components |
-| **Framework** | React | 19.2.5+ | Concurrent features |
-| **Styling** | Tailwind CSS | 4.2.2 | CSS-first, OKLCH colors |
+| **Frontend** | Next.js | 16.2.3+ | App Router, Server Components, Turbopack |
+| **Framework** | React | 19.2.5+ | Concurrent features, Server Actions, No `forwardRef` |
+| **Styling** | Tailwind CSS | 4.2.2 | CSS-first theming, OKLCH colors |
 | **UI** | Radix UI + shadcn | Latest | Accessible primitives |
 | **Animation** | Framer Motion | 12.38.0+ | Smooth micro-interactions |
 | **State** | TanStack Query | 5.99.0+ | Server state |
+| **Client State** | Zustand | 5.0.12+ | Lightweight state |
 | **Backend** | Django | 6.0.4+ | API + Admin |
-| **API** | Django Ninja | 1.6.2+ | Pydantic v2 |
+| **API** | Django Ninja | 1.6.2+ | Pydantic v2 validation |
 | **Database** | PostgreSQL | 17 | JSONB optimization |
-| **Cache** | Redis | 7.4-alpine | Sessions, cart, rate limit |
+| **Cache** | Redis | 7.4-alpine | Sessions, cart (30-day TTL) |
 | **Payment** | Stripe | 14.4.1 | SGD, GrabPay, PayNow |
 | **Testing** | Vitest + Playwright | Latest | Unit + E2E |
 
+### Architecture Patterns
+
+#### 1. BFF (Backend for Frontend)
+**Location**: `frontend/app/api/proxy/[...path]/route.ts`
+- Secure JWT handling via HttpOnly cookies (never stored in localStorage)
+- Client Components → BFF Proxy → Django API
+- Server Components → Direct backend call via `authFetch()`
+
+#### 2. Centralized API Registry (CRITICAL)
+**Location**: `backend/api_registry.py`
+- Eager router registration at import time (NOT in `ready()` method)
+- Prevents circular imports and ensures endpoints are registered before URL resolver runs
+- Router endpoints use RELATIVE paths: `@router.get("/")` NOT `@router.get("/products/")`
+
+#### 3. Server-First Design
+- **Server Components (RSC)**: Product listing, product detail, articles (SEO-critical)
+- **Client Components**: Cart drawer, quiz interface, filter sidebar, forms with state
+
 ---
 
-## 📁 Project Structure
+## 🗂️ Project Structure
 
 ```
-/home/project/tea-culture/cha-yuan/
-├── 📁 backend/              # Django 6 Backend
-│   ├── 📄 api_registry.py   # Centralized API router (CRITICAL)
-│   ├── 📁 apps/
-│   │   ├── 📁 api/v1/      # API endpoints
-│   │   │   ├── products.py
-│   │   │   ├── cart.py
-│   │   │   ├── checkout.py
-│   │   │   ├── quiz.py
-│   │   │   ├── subscriptions.py
-│   │   │   └── content.py
-│   │   ├── 📁 commerce/    # Product, Order, Subscription models
-│   │   │   ├── models.py
-│   │   │   ├── curation.py     # AI curation algorithm
-│   │   │   └── management/commands/seed_products.py
-│   │   ├── 📁 content/     # Quiz, Articles, User Preferences
-│   │   │   └── models.py
-│   │   └── 📁 core/        # User, Auth, SG utilities
-│   │       ├── models.py
-│   │       ├── authentication.py  # JWT + HttpOnly cookies
-│   │       └── sg/         # GST, address validation
-│   └── 📁 chayuan/         # Settings
-│       └── settings/
+cha-yuan/
+├── backend/                         # Django 6 Backend
+│   ├── api_registry.py              # CRITICAL: Centralized API router (eager registration)
+│   ├── apps/
+│   │   ├── api/v1/                  # Django Ninja Routers
+│   │   │   ├── auth.py              # JWT authentication
+│   │   │   ├── products.py          # Product catalog API
+│   │   │   ├── cart.py              # Shopping cart API
+│   │   │   ├── checkout.py          # Stripe checkout & webhooks
+│   │   │   ├── content.py           # Articles & culture API
+│   │   │   ├── quiz.py              # Quiz & preferences API
+│   │   │   └── subscriptions.py     # Subscription management
+│   │   ├── commerce/                # Product & Commerce
+│   │   │   ├── models.py            # Product, Origin, TeaCategory, Subscription, Order
+│   │   │   ├── cart.py              # Redis cart service (418 lines)
+│   │   │   ├── curation.py          # AI curation algorithm (60/30/10)
+│   │   │   ├── stripe_sg.py         # Singapore Stripe integration
+│   │   │   ├── admin.py             # Django Admin customization
+│   │   │   └── management/commands/seed_products.py  # Seed 12 premium teas
+│   │   ├── content/                 # Content & Quiz
+│   │   │   ├── models.py            # QuizQuestion, QuizChoice, UserPreference, Article
+│   │   │   ├── admin.py             # Quiz admin with inline choices
+│   │   │   └── management/commands/seed_quiz.py       # Seed 6 quiz questions
+│   │   └── core/                    # Users & Auth
+│   │       ├── models.py            # User with SG validation
+│   │       ├── authentication.py    # JWT + HttpOnly cookies
+│   │       └── sg/                  # Singapore utilities
+│   │           ├── validators.py    # Phone, postal code validation
+│   │           └── pricing.py       # GST calculation
+│   ├── chayuan/                     # Django Project Config
+│   │   ├── settings/                # Environment-specific settings
+│   │   │   ├── base.py
+│   │   │   ├── development.py
+│   │   │   └── production.py
+│   │   └── urls.py                  # URL configuration (imports from api_registry)
+│   └── requirements/
+│       ├── base.txt                 # Production dependencies
+│       └── dev.txt                  # Development dependencies
 │
-├── 📁 frontend/            # Next.js 16 Frontend
-│   ├── 📁 app/             # App Router
-│   │   ├── 📁 (routes)/
-│   │   │   ├── 📁 products/
-│   │   │   │   ├── page.tsx          # Product listing
-│   │   │   │   └── 📁 [slug]/
-│   │   │   │       └── page.tsx      # Product detail (Dynamic)
-│   │   │   ├── 📁 culture/
-│   │   │   │   ├── page.tsx
-│   │   │   │   └── 📁 [slug]/
-│   │   │   │       └── page.tsx
-│   │   │   ├── 📁 quiz/
-│   │   │   ├── 📁 cart/
-│   │   │   ├── 📁 checkout/
-│   │   │   └── 📁 dashboard/
-│   │   ├── 📁 api/proxy/[...path]/   # BFF proxy
-│   │   │   └── route.ts
-│   │   ├── layout.tsx
-│   │   ├── page.tsx
-│   │   └── globals.css
-│   ├── 📁 components/
-│   │   ├── 📁 ui/          # shadcn primitives
+├── frontend/                        # Next.js 16 Frontend
+│   ├── app/                         # App Router
+│   │   ├── (routes)/                # Logic-grouped routes
+│   │   │   ├── products/            # Product catalog
+│   │   │   │   ├── page.tsx         # Product listing (Server Component)
+│   │   │   │   ├── [slug]/
+│   │   │   │   │   └── page.tsx     # Product detail (Dynamic)
+│   │   │   │   └── components/
+│   │   │   │       └── product-catalog.tsx
+│   │   │   ├── culture/             # Articles & Tea Culture
+│   │   │   ├── quiz/                # Preference Quiz
+│   │   │   ├── cart/
+│   │   │   ├── checkout/            # Stripe checkout flow
+│   │   │   │   ├── success/
+│   │   │   │   └── cancel/
+│   │   │   ├── dashboard/
+│   │   │   │   └── subscription/    # Subscription dashboard
+│   │   │   └── shop/
+│   │   │       └── page.tsx         # Redirects to /products
+│   │   ├── api/
+│   │   │   └── proxy/
+│   │   │       └── [...path]/
+│   │   │           └── route.ts     # BFF Proxy Route
+│   │   ├── page.tsx                 # Home page (Hero landing)
+│   │   ├── layout.tsx               # Root layout with fonts
+│   │   ├── globals.css              # Tailwind v4 theme (349 lines)
+│   │   └── providers.tsx            # QueryClientProvider
+│   ├── components/
+│   │   ├── ui/                      # shadcn primitives (Button, Input, Sheet, etc.)
+│   │   ├── sections/                # Page sections (hero, navigation, etc.)
 │   │   ├── product-card.tsx
 │   │   ├── product-grid.tsx
 │   │   ├── product-gallery.tsx
 │   │   ├── related-products.tsx
 │   │   ├── filter-sidebar.tsx
+│   │   ├── article-card.tsx
+│   │   ├── article-grid.tsx
 │   │   ├── gst-badge.tsx
-│   │   ├── navigation.tsx
-│   │   └── ...
-│   └── 📁 lib/
-│       ├── 📁 api/         # API functions
-│       │   └── products.ts
-│       ├── 📁 types/       # TypeScript interfaces
-│       ├── auth-fetch.ts   # BFF wrapper
-│       └── utils.ts
+│   │   └── cart-drawer.tsx
+│   ├── lib/
+│   │   ├── api/
+│   │   │   ├── products.ts
+│   │   │   ├── quiz.ts
+│   │   │   └── subscription.ts
+│   │   ├── types/
+│   │   │   ├── product.ts
+│   │   │   ├── quiz.ts
+│   │   │   └── subscription.ts
+│   │   ├── hooks/
+│   │   │   └── use-subscription.ts
+│   │   ├── auth-fetch.ts            # BFF wrapper (148 lines)
+│   │   ├── animations.ts
+│   │   └── utils.ts
+│   └── public/
+│       └── images/
 │
-├── 📁 infra/               # Docker Infrastructure
-│   └── 📁 docker/
-│       ├── docker-compose.yml
+├── infra/
+│   └── docker/                      # Infrastructure
+│       ├── docker-compose.yml       # PostgreSQL 17 + Redis 7.4 + Backend + Frontend
 │       ├── Dockerfile.backend.dev
 │       └── Dockerfile.frontend.dev
 │
-└── 📁 docs/                # Documentation
-    ├── PHASE_7_SUBPLAN.md
-    └── TASK_*.md
+└── docs/                            # Documentation
+    ├── Project_Architecture_Document.md  # Full architecture (1,409 lines)
+    ├── PHASE_0_SUBPLAN.md           # Foundation & Docker
+    ├── PHASE_1_SUBPLAN.md           # Backend Models
+    ├── PHASE_2_SUBPLAN.md           # JWT Auth + BFF
+    ├── PHASE_3_SUBPLAN.md           # Design System
+    ├── PHASE_4_SUBPLAN.md           # Product Catalog
+    ├── PHASE_5_SUBPLAN.md           # Cart & Checkout
+    ├── PHASE_6_SUBPLAN.md           # Tea Culture
+    └── PHASE_7_SUBPLAN.md           # Quiz & Subscription
 ```
 
 ---
 
-## 🔄 Development Workflow
+## 🍵 Core Business Logic
 
-### Environment Setup
+### Curation Algorithm (60/30/10)
+**Location**: `backend/apps/commerce/curation.py`
 
-```bash
-# 1. Start Infrastructure (PostgreSQL + Redis)
-cd cha-yuan/infra/docker
-docker-compose up -d
+Scores products for subscription boxes based on three weighted factors:
 
-# 2. Backend Setup
-cd cha-yuan/backend
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements/development.txt
-python manage.py migrate
-python manage.py seed_products  # Seed sample products
-python manage.py seed_quiz      # Seed quiz questions
-python manage.py runserver 127.0.0.1:8000 --settings=chayuan.settings.development
+1. **User Preferences (60%)**: Based on one-time onboarding quiz scores (0-100 per category)
+2. **Seasonality (30%)**: Matches tea harvest cycles to current Singapore season
+   - Spring: March-May
+   - Summer: June-August
+   - Autumn: September-November
+   - Winter: December-February
+3. **Inventory (10%)**: Boosts products with healthy stock levels to ensure fulfillment
 
-# 3. Frontend Setup
-cd cha-yuan/frontend
-npm install
-npm run dev  # Port 3000
+```python
+def score_products(products, prefs):
+    """Score products based on user preferences."""
+    scored = []
+    for product in products:
+        score = 1.0
+        if prefs:
+            cat_pref = prefs.get(product.category.slug, 0)
+            score += cat_pref * 0.6  # 60% preference weight
+        if product.is_new_arrival:
+            score += 0.3  # New arrival boost
+        scored.append((product, score))
+    scored.sort(key=lambda x: x[1], reverse=True)
+    return scored
 ```
 
-### Build Commands
+### Shopping Cart (Redis-Backed)
+**Location**: `backend/apps/commerce/cart.py` (418 lines)
 
-| Command | Purpose | Location |
-|---------|---------|----------|
-| `npm run dev` | Start dev server | frontend/ |
-| `npm run build` | Production build | frontend/ |
-| `npm run typecheck` | TypeScript check | frontend/ |
-| `npm test` | Run tests | frontend/ |
-| `python manage.py runserver` | Django dev | backend/ |
-| `pytest` | Backend tests | backend/ |
-| `docker-compose up -d` | Start services | infra/docker/ |
+- Persistent storage in Redis with 30-day TTL
+- Anonymous cart merges with authenticated cart on login
+- Atomic operations using Redis HINCRBY
+- Stock validation with error handling
+
+---
+
+## 🇸🇬 Singapore Context & Compliance
+
+### GST 9% (Goods and Services Tax)
+**Location**: `backend/apps/commerce/models.py`
+
+```python
+GST_RATE = Decimal('0.09')
+
+def get_price_with_gst(self):
+    """Return price including GST."""
+    if self.gst_inclusive:
+        return self.price_sgd
+    return (self.price_sgd * Decimal("1.09")).quantize(
+        Decimal("0.01"), rounding=ROUND_HALF_UP
+    )
+
+def get_gst_amount(self):
+    """Calculate GST amount for display."""
+    if self.gst_inclusive:
+        return self.price_sgd - (self.price_sgd / Decimal("1.09"))
+    return self.price_sgd * GST_RATE
+```
+
+### Singapore Address Format
+```
+Block/Street: "Blk 123 Jurong East St 13"
+Unit: "#04-56"
+Postal Code: "600123" (6 digits, validated with ^\d{6}$)
+```
+
+### Singapore Phone Format
+```
+Format: +65 XXXX XXXX
+Validation: ^\+65\s?\d{8}$
+Examples: +65 9123 4567, +6591234567
+```
+
+### Stripe Integration
+```python
+stripe.checkout.Session.create(
+    payment_method_types=['card', 'grabpay', 'paynow'],
+    currency='sgd',
+    shipping_address_collection={'allowed_countries': ['SG']},
+    # ...
+)
+```
+
+### PDPA Compliance
+- User model includes `pdpa_consent_at` timestamp
+- Consent tracking mandatory for all users
+- Checkbox on signup: "I consent to PDPA terms"
+
+### Timezone
+All operations use `Asia/Singapore` (SGT)
+- Django: `TIME_ZONE = "Asia/Singapore"`
+- JavaScript: `Intl.DateTimeFormat("en-SG", { timeZone: "Asia/Singapore" })`
+
+---
+
+## 🎨 Design System
+
+### Color Palette
+| Token | Hex | Usage |
+|-------|-----|-------|
+| `--color-tea-500` | `#5C8A4D` | Primary brand color |
+| `--color-tea-600` | `#4A7040` | Primary hover state |
+| `--color-ivory-50` | `#FDFBF7` | Page background |
+| `--color-ivory-100` | `#FAF6EE` | Paper texture background |
+| `--color-terra-400` | `#C4724B` | Warm accents |
+| `--color-bark-900` | `#2A1D14` | Text primary |
+| `--color-gold-500` | `#B8944D` | Accent, prices, CTAs |
+
+### Typography
+- **Display**: "Playfair Display", serif (headings)
+- **Sans**: "Inter", system-ui (body)
+- **Chinese**: "Noto Serif SC", serif (茶源 branding)
+
+### Tailwind CSS v4 Configuration
+**Location**: `frontend/app/globals.css`
+
+```css
+@import "tailwindcss";
+
+@theme {
+  --color-tea-50: #f4f7f1;
+  --color-tea-500: #5c8a4d;
+  --color-tea-600: #4a7040;
+  --color-ivory-50: #fdfbf7;
+  --color-ivory-100: #faf6ee;
+  --color-terra-400: #c4724b;
+  --color-bark-900: #2a1d14;
+  --color-gold-500: #b8944d;
+  
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-serif: "Playfair Display", Georgia, serif;
+  --font-chinese: "Noto Serif SC", serif;
+}
+```
+
+**CRITICAL**: No `tailwind.config.js` - all configuration in CSS via `@theme`.
+
+---
+
+## 🔐 Security & Authentication
+
+### BFF Pattern (Backend for Frontend)
+**Location**: `frontend/lib/auth-fetch.ts`
+
+```typescript
+// Server Component: Direct backend call
+const response = await authFetch("/api/v1/products/", { skipAuth: true });
+
+// Client Component: Through proxy (handled automatically by authFetch)
+const response = await authFetch("/api/v1/cart/add/", {
+  method: "POST",
+  body: JSON.stringify({ product_id: 1, quantity: 2 }),
+});
+```
+
+### Authentication Flow
+1. **Login**: Django issues JWT tokens → Sets HttpOnly cookies
+2. **Client Requests**: Frontend → BFF Proxy → Extracts JWT from cookie → Forwards to Django
+3. **Never Store in localStorage**: Always use HttpOnly cookies via BFF
+4. **Token Refresh**: Automatic on 401 via BFF proxy
+
+### Cookie Attributes
+- `HttpOnly`: Prevents XSS access
+- `Secure`: HTTPS only in production
+- `SameSite=Lax`: CSRF protection
+- Access token: 15min expiry
+- Refresh token: 7 days expiry
 
 ---
 
 ## 🧪 Testing Strategy
 
 ### Backend Tests (Pytest)
+**Test Status**: 93+ tests passing
+
 ```bash
 cd backend
-pytest -v                              # Run all tests
-pytest apps/content/tests/ -v         # Quiz tests
-pytest apps/commerce/tests/ -v        # Product/Order tests
+pytest -v                           # Run all tests
+pytest apps/content/tests/ -v       # Quiz tests
+pytest apps/commerce/tests/ -v      # Product/Order tests
+pytest --cov=apps --cov-report=html # With coverage
 ```
 
-### Frontend Tests
+### Frontend Tests (Vitest + Playwright)
+**Test Status**: 39 tests passing
+
 ```bash
 cd frontend
-npm test                              # Vitest unit tests
-npm run test:e2e                      # Playwright E2E
+npm test                           # Unit tests
+npm run test:coverage              # Coverage report
+npm run test:e2e                   # Playwright E2E
+npm run test:e2e:ui                # Playwright with UI
+```
+
+### TypeScript Strict Mode
+```bash
+npm run typecheck  # 0 errors expected
 ```
 
 ### Pre-Commit Checklist
@@ -210,158 +422,238 @@ pytest
 npm run typecheck
 npm run lint
 npm run build
+npm test
 ```
 
 ---
 
-## 🎨 Implementation Standards
+## 🚀 Development Workflow
+
+### Environment Setup
+
+#### 1. Start Infrastructure (PostgreSQL 17 + Redis 7.4)
+```bash
+cd infra/docker
+docker-compose up -d
+
+# Verify services
+pg_isready -h 127.0.0.1 -p 5432    # Should return "accepting connections"
+redis-cli -h 127.0.0.1 -p 6379 ping  # Should return "PONG"
+```
+
+#### 2. Backend Setup
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements/dev.txt
+
+# Database setup
+python manage.py migrate --settings=chayuan.settings.development
+
+# Seed test data
+python manage.py seed_products --settings=chayuan.settings.development  # 12 products
+python manage.py seed_quiz --settings=chayuan.settings.development      # 6 quiz questions
+
+# Start Django server
+python manage.py runserver 127.0.0.1:8000 --settings=chayuan.settings.development
+```
+
+#### 3. Frontend Setup
+```bash
+cd frontend
+npm install
+npm run dev  # Port 3000
+```
+
+### Access Points
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Django Admin | http://localhost:8000/admin/ |
+| API Documentation | http://localhost:8000/docs/ |
+| OpenAPI Schema | http://localhost:8000/openapi.json |
+
+---
+
+## 📋 Implementation Standards
 
 ### Backend (Django + Django Ninja)
 
-**API Router Registration (CRITICAL)**
-- Use Centralized API Registry pattern in `api_registry.py`
-- Register routers at import time (NOT in `ready()` method)
-- Router URLs should NOT include the base path twice
+#### API Router Registration (CRITICAL)
+**Location**: `backend/api_registry.py`
 
 ```python
-# api_registry.py
+# Centralized registration at import time
 api.add_router("/products/", products_router)
 
-# products.py - ENDPOINTS USE RELATIVE PATHS
-@router.get("/")              # NOT "/products/"
-@router.get("/{slug}/")       # NOT "/products/{slug}/"
+# Router endpoints use RELATIVE paths:
+@router.get("/")           # Accessible at /api/v1/products/
+@router.get("/{slug}/")    # Accessible at /api/v1/products/{slug}/
 ```
 
-**Singapore Context**
-- GST 9%: `product.get_price_with_gst()` and `get_gst_amount()`
-- SGD currency: Hardcoded as default
-- Address format: Block/Street, Unit, Postal Code (6 digits)
-- Phone: +65 validation
-- Timezone: Asia/Singapore
-
-**Model Patterns**
+#### Model Patterns
 - Use `select_related()` for FK relations
 - Use `prefetch_related()` for reverse FKs
 - Add `is_available=True` filters for public APIs
+- Use `GST_RATE = Decimal('0.09')` for pricing
 
-### Frontend (Next.js + React 19)
+### Frontend (Next.js 16 + React 19)
 
-**Next.js 15+ Async Params**
-- Page params are now `Promise<>` in Next.js 15+
-- Must `await params` before accessing slug
+#### Next.js 15+ Async Params (CRITICAL)
+Page `params` and `searchParams` are **Promises**. Must `await` them.
 
 ```typescript
 // CORRECT (Next.js 15+)
 interface PageProps {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ category?: string }>;
 }
 
-export default async function Page({ params }: PageProps) {
-  const { slug } = await params;
-  const data = await fetchData(slug);
+export default async function Page({ params, searchParams }: PageProps) {
+  const { slug } = await params;           // MUST await before accessing
+  const filters = await searchParams;
 }
 ```
 
-**TypeScript Strict Mode**
+#### TypeScript Strict Mode
 - No `any` - use `unknown` instead
 - Prefer `interface` over `type` (except unions)
 - Explicit return types on public functions
 - Handle `undefined` in filter types: `category?: string | undefined`
 
-**Tailwind CSS v4 (CSS-first)**
-- Theme configured in `globals.css` with `@theme`
-- NO `tailwind.config.js` - all config in CSS
-- Use `cn()` utility for conditional classes
-
-**BFF Pattern (Backend for Frontend)**
+#### React 19 (No forwardRef)
 ```typescript
-// Server Component: Direct backend call
-const response = await authFetch(`/api/v1/products/`, { skipAuth: true });
+// CORRECT (React 19) - ref is standard prop
+function MyComponent({ ref, ...props }: { ref: React.Ref<HTMLDivElement> }) {
+  return <div ref={ref} {...props} />;
+}
 
-// Client Component: Through proxy
-const response = await authFetch(`/api/v1/products/`, { skipAuth: true });
-// auth-fetch.ts automatically routes through /api/proxy/*
+// INCORRECT (pre-React 19) - DON'T use forwardRef
+const MyComponent = forwardRef((props, ref) => { ... });
 ```
 
-**API Error Handling**
-- Backend API returns 404 with message for not found
-- Frontend must handle network errors gracefully
-- Categories/Origins endpoints can return empty arrays
+#### Tailwind CSS v4 (CSS-first)
+- Theme in `globals.css` with `@theme`
+- NO `tailwind.config.js`
+- Use `cn()` utility for conditional classes
 
-### UI Components
-
-**shadcn/ui Usage (REQUIRED)**
-- Use shadcn primitives: Button, Input, Sheet, Dialog
-- Wrap/modify for bespoke styling, don't rebuild
-- GST Badge is custom: `components/gst-badge.tsx`
-
-**Animation**
-- Framer Motion for transitions
-- Respect `prefers-reduced-motion`
-- Use `useReducedMotion()` hook
-
+#### Animation (Framer Motion)
 ```typescript
 const prefersReducedMotion = useReducedMotion();
-initial={prefersReducedMotion ? {} : { opacity: 0 }}
+initial={prefersReducedMotion ? {} : { opacity: 0, y: 30 }}
+transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+```
+
+#### Hydration-Safe Animated Links
+```typescript
+// ❌ INVALID: Link inside motion.div causes hydration errors
+<Link href="/product"><motion.div>...</motion.div></Link>
+
+// ✅ VALID: motion.create(Link)
+const MotionLink = motion.create(Link);
+<MotionLink href="/product" whileHover="hover">...</MotionLink>
 ```
 
 ---
 
-## 🔐 Security & Compliance
+## 🔗 Key API Endpoints
 
-### Authentication (BFF Pattern)
-- JWT tokens stored in HttpOnly cookies
-- Frontend uses BFF proxy (`/api/proxy/*`) to Django
-- Never store tokens in localStorage
+### Public Endpoints (No Auth Required)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/products/` | GET | List products (paginated, filtered) |
+| `/api/v1/products/{slug}/` | GET | Product detail |
+| `/api/v1/products/categories/` | GET | Tea categories |
+| `/api/v1/products/origins/` | GET | Tea origins |
+| `/api/v1/content/articles/` | GET | Articles list |
+| `/api/v1/content/articles/{slug}/` | GET | Article detail |
+| `/api/v1/quiz/questions/` | GET | Quiz questions |
+| `/api/v1/checkout/config/` | GET | Stripe publishable key |
 
-### Singapore Compliance
-- **PDPA**: User consent tracked in `User.has_pdpa_consent`
-- **GST 9%**: All prices displayed as inclusive
-- **Address Format**: Block/Street, Unit, Postal Code
-- **Phone**: +65 prefix validation
+### Authenticated Endpoints (JWT Required)
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/v1/cart/` | GET/POST/PUT/DELETE | Shopping cart operations |
+| `/api/v1/checkout/create-session/` | POST | Create Stripe checkout session |
+| `/api/v1/checkout/webhook/` | POST | Stripe webhook handler |
+| `/api/v1/quiz/submit/` | POST | Submit quiz answers |
+| `/api/v1/quiz/preferences/` | GET | Get user preferences |
+| `/api/v1/subscriptions/current/` | GET | Get current subscription |
+| `/api/v1/subscriptions/cancel/` | POST | Cancel subscription |
+| `/api/v1/auth/me/` | GET | Current user profile |
+| `/api/v1/auth/login/` | POST | Login (sets HttpOnly cookies) |
+| `/api/v1/auth/logout/` | POST | Logout (clears cookies) |
 
-### Stripe Integration
-- Test keys: Use `pk_test_*` and `sk_test_*`
-- Webhook endpoint: `/api/v1/checkout/webhook/`
-- Currency: SGD only
-- Payment methods: Cards, GrabPay, PayNow
+**NOTE**: All API calls to Django Ninja MUST include trailing slashes (e.g., `/api/v1/products/`).
+
+---
+
+## ⚠️ Anti-Patterns to Avoid
+
+1. **Never** store JWT in `localStorage`. Use the BFF proxy + HttpOnly cookies.
+2. **Never** use `any` in TypeScript. Use `unknown` or specific interfaces.
+3. **Never** build a custom component if a `shadcn/ui` primitive exists. Wrap it instead.
+4. **Never** forget trailing slashes on API calls to Django Ninja.
+5. **Never** use `forwardRef` in React 19. Treat `ref` as a standard prop.
+6. **Never** create `tailwind.config.js`. Use CSS-first configuration in `globals.css`.
+7. **Never** register routers in `AppConfig.ready()`. Use eager registration in `api_registry.py`.
+8. **Never** use absolute paths in Django Ninja router endpoints. Use relative paths.
+9. **Never** skip `await` on Next.js 15+ params.
+10. **Never** commit secrets (use .env files).
 
 ---
 
 ## 🐛 Common Issues & Solutions
 
 ### Issue: API 404 "Not Found"
-**Cause**: Duplicate path in router registration  
+**Cause**: Duplicate path in router registration
 **Fix**: Use relative paths in router endpoints
 ```python
 # BAD
 @router.get("/products/{slug}/")
 
-# GOOD  
+# GOOD
 @router.get("/{slug}/")
 ```
 
 ### Issue: Product Detail Page 404
-**Cause 1**: Next.js 15 async params not awaited  
+**Cause 1**: Next.js 15 async params not awaited
 **Fix**: `const { slug } = await params`
 
-**Cause 2**: Frontend calling wrong URL  
-**Fix**: `BASE_URL = /api/v1/products` (not `/api/v1`)
+**Cause 2**: Frontend calling wrong URL
+**Fix**: Ensure trailing slash: `/api/v1/products/{slug}/`
 
 ### Issue: Build Fails - Categories Not Found
-**Cause**: Static generation without backend  
+**Cause**: Static generation without backend
 **Fix**: Add error handling in page.tsx
 ```typescript
 const categories = await getCategories().catch(() => []);
 ```
 
 ### Issue: TypeScript Errors
-**Common**: `Type 'string | undefined' is not assignable`  
+**Common**: `Type 'string | undefined' is not assignable`
 **Fix**: Add explicit union: `category?: string | undefined`
 
-### Issue: Trailing Slash Redirects
-**Observation**: Django Ninja returns 308 redirect for URLs without trailing slash  
-**Solution**: Always include trailing slash in API calls
+### Issue: Hydration Mismatches with Framer Motion + Next.js Link
+**Cause**: `<Link>` inside `<motion.div>` causes SSR mismatch
+**Fix**: Use `motion.create(Link)` for hydration-safe animated links
+
+---
+
+## 📚 Documentation References
+
+| Document | Purpose |
+|----------|---------|
+| `README.md` | Comprehensive project overview (579 lines) |
+| `CLAUDE.md` | This document - concise agent briefing |
+| `GEMINI.md` | Gemini CLI context (291 lines) |
+| `AGENTS.md` | Project-specific context (1,400+ lines) |
+| `PROJECT_KNOWLEDGE_BASE.md` | Technical knowledge base (156 lines) |
+| `CODE_REVIEW_REPORT.md` | Code review findings (223 lines) |
+| `docs/Project_Architecture_Document.md` | Full architecture with diagrams (1,409 lines) |
+| `docs/PHASE_7_SUBPLAN.md` | Quiz & Subscription implementation (752 lines) |
+| `docs/MASTER_EXECUTION_PLAN.md` | Full 8-phase roadmap (1,222 lines) |
 
 ---
 
@@ -370,61 +662,30 @@ const categories = await getCategories().catch(() => []);
 | Phase | Feature | Status | Notes |
 |-------|---------|--------|-------|
 | 0 | Foundation & Docker | ✅ Complete | PostgreSQL 17, Redis 7.4 |
-| 1 | Backend Models | ✅ Complete | Product, Order, Subscription |
-| 2 | JWT Auth + BFF | ✅ Complete | HttpOnly cookies, proxy |
-| 3 | Design System | ✅ Complete | Tailwind v4, shadcn |
-| 4 | Product Catalog | ✅ Complete | Listing + Detail pages |
-| 5 | Cart & Checkout | ✅ Complete | Stripe SG integration |
-| 6 | Tea Culture | ✅ Complete | Articles, content |
-| 7 | Quiz & Subscription | ✅ Complete | Curation algorithm |
-| 8 | Testing & Deploy | 🚧 In Progress | E2E tests, prod verification |
+| 1 | Backend Models | ✅ Complete | Product, Order, Subscription, User |
+| 2 | JWT Auth + BFF | ✅ Complete | HttpOnly cookies, BFF proxy, JWT |
+| 3 | Design System | ✅ Complete | Tailwind v4, shadcn, Eastern aesthetic |
+| 4 | Product Catalog | ✅ Complete | Listing + Detail pages, filtering |
+| 5 | Cart & Checkout | ✅ Complete | Redis cart, Stripe SG integration |
+| 6 | Tea Culture | ✅ Complete | Articles, brewing guides |
+| 7 | Quiz & Subscription | ✅ Complete | Curation algorithm, dashboard |
+| 8 | Testing & Deploy | 🚧 In Progress | 93 backend + 39 frontend tests passing |
 
-**Working Features**:
-- Product catalog with filtering (category, origin, season, fermentation)
-- Product detail pages with brewing guides
-- Quiz system with weighted preference scoring
-- Shopping cart (Redis-backed)
-- Stripe checkout with SGD
-- User authentication (JWT)
-- Subscription dashboard
-- Article content system
+### Working Features
+- ✅ Product catalog with filtering (category, origin, season, fermentation)
+- ✅ Product detail pages with brewing guides, image gallery, related products
+- ✅ Quiz system with weighted preference scoring (60/30/10 algorithm)
+- ✅ Shopping cart (Redis-backed, persistent)
+- ✅ Stripe checkout with SGD currency
+- ✅ User authentication (JWT + HttpOnly cookies)
+- ✅ Subscription dashboard with status, billing, box preview
+- ✅ Article content system with markdown
+- ✅ GST calculation (9%)
+- ✅ Singapore address format validation
+- ✅ PDPA compliance tracking
 
-**Current Gap**: None critical - project is functional
-
----
-
-## 🔗 Key API Endpoints
-
-### Public Endpoints (No Auth)
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/products/` | GET | List products with filters |
-| `/api/v1/products/{slug}/` | GET | Product detail |
-| `/api/v1/products/categories/` | GET | Tea categories |
-| `/api/v1/products/origins/` | GET | Tea origins |
-| `/api/v1/quiz/questions/` | GET | Quiz questions |
-| `/api/v1/content/articles/` | GET | Articles list |
-| `/api/v1/content/articles/{slug}/` | GET | Article detail |
-
-### Authenticated Endpoints
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/api/v1/cart/` | GET | Cart contents |
-| `/api/v1/cart/add/` | POST | Add to cart |
-| `/api/v1/cart/update/` | PUT | Update quantity |
-| `/api/v1/checkout/create-session/` | POST | Stripe checkout |
-| `/api/v1/subscriptions/current/` | GET | Current subscription |
-| `/api/v1/quiz/submit/` | POST | Submit quiz |
-
----
-
-## 📚 Documentation References
-
-- `README.md` - Comprehensive project overview
-- `docs/PHASE_7_SUBPLAN.md` - Phase 7 implementation plan
-- `docs/TASK_*.md` - Task-specific sub-plans
-- `/tea-culture/MASTER_EXECUTION_PLAN.md` - Full roadmap
-- `/tea-culture/status_new.md` - Current status
+### Current Gap
+None critical - project is functional and production-ready pending final E2E tests.
 
 ---
 
@@ -433,9 +694,9 @@ const categories = await getCategories().catch(() => []);
 You are successful when:
 
 1. **Code Quality**
-   - TypeScript strict mode passes
-   - No ESLint errors
-   - All tests passing
+   - TypeScript strict mode passes (0 errors)
+   - No ESLint warnings
+   - All tests passing (93 backend + 39 frontend)
 
 2. **Feature Completeness**
    - Product catalog displays with filters
@@ -455,69 +716,6 @@ You are successful when:
    - HttpOnly cookies for auth
    - CSRF protection on forms
    - Rate limiting on API
-
----
-
-## ⚠️ Anti-Patterns to Avoid
-
-1. **Never** store JWT in localStorage - use HttpOnly cookies
-2. **Never** use `any` type in TypeScript
-3. **Never** duplicate API paths in router endpoints
-4. **Never** skip `await` on Next.js 15+ params
-5. **Never** commit secrets (use .env files)
-6. **Never** forget trailing slashes on API calls
-7. **Never** mix v3 and v4 Tailwind utilities
-
----
-
-## 🚀 Next Steps (Phase 8)
-
-1. **E2E Testing**: Playwright tests for critical flows
-2. **Production Build**: Verify static export
-3. **Performance**: Lighthouse audit
-4. **Security Scan**: Dependency audit
-5. **Documentation**: API documentation update
-
----
-
-## 📋 Recent Accomplishments (2026-04-20)
-
-### ✅ Landing Page Navigation Fixed
-
-**Critical Issue:** Products in "Curated by Nature" section were non-clickable
-
-**Solution:**
-- Added `slug` property to all tea items in collection data
-- Implemented `motion.create(Link)` for hydration-safe animated navigation
-- Updated seed_products.py to match landing page display values
-
-**Files Modified:**
-- `frontend/components/sections/collection.tsx`
-- `backend/apps/commerce/management/commands/seed_products.py`
-
-**Verification:**
-- TypeScript: 0 errors
-- Build: Production successful
-- Navigation: Landing → Product pages working
-
-### ✅ Documentation Sync
-
-- README.md: Updated file hierarchy (750 lines)
-- GEMINI.md: Updated technical details (150 lines)
-- Project_Architecture_Document.md: Complete structure (1,252 lines)
-- ACCOMPLISHMENTS.md: Created milestone tracking
-
-### 🔑 Key Lesson
-
-**Hydration Fix Pattern:**
-```typescript
-// ❌ INVALID: Link inside motion.div
-<Link href="/product"><motion.div>...</motion.div></Link>
-
-// ✅ VALID: motion.create(Link)
-const MotionLink = motion.create(Link);
-<MotionLink href="/product" whileHover="hover">...</MotionLink>
-```
 
 ---
 
@@ -1641,7 +1839,8 @@ See `ACCOMPLISHMENTS.md` for complete details.
 **Role**: Senior Frontend Architect & Technical Partner
 **Project**: CHA YUAN (Premium Tea E-Commerce for Singapore)
 **Phase**: 8 (Testing & Deployment)
-**Last Updated**: 2026-04-20
+**Last Updated**: 2026-04-21
+**Version**: 1.2.0
 
 ---
 
@@ -1661,9 +1860,10 @@ CHA YUAN is a premium tea e-commerce platform built exclusively for the Singapor
 
 ### Project Status
 
-- **Total Tests**: 93+ backend (pytest) + 39 frontend (Vitest) tests passing
+- **Total Tests**: 93+ backend (pytest) + 43+ tests total (including new Cart persistence tests) passing
 - **TypeScript**: Strict mode, 0 errors
-- **Phase**: 8 - Production-ready pending final E2E tests
+- **Cart API**: Fixed 401 errors for anonymous users; implemented `Set-Cookie` persistence for guest carts
+- **Phase**: 8 - Production-ready pending final E2E verification
 
 ---
 
@@ -1671,7 +1871,8 @@ CHA YUAN is a premium tea e-commerce platform built exclusively for the Singapor
 
 - **Currency**: SGD (Hardcoded default, formatter: `Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD' })`)
 - **Taxation**: 9% GST calculated on all prices (displayed as inclusive, `GST_RATE = Decimal('0.09')`)
-- **Timezone**: `Asia/Singapore` (SGT) - used for seasonal curation
+- **Pricing**: Calculations follow IRAS guidelines using `ROUND_HALF_UP` rounding
+- **Timezone**: `Asia/Singapore` (SGT) - used for seasonal curation and billing
 - **Compliance**: PDPA consent tracking is mandatory (`User.pdpa_consent_at`)
 - **Logistics**: Singapore-specific address validation (Block/Street, Unit, 6-digit Postal Code)
 - **Phone**: `+65 XXXX XXXX` validation (`^\+65\s?\d{8}$`)
@@ -1717,7 +1918,7 @@ npm run dev  # Uses Turbopack (--turbopack flag in package.json)
 
 ### Testing
 
-- **Backend**: `pytest` (Target: 85%+ coverage, current: 93+ tests passing)
+- **Backend**: `pytest` (Target: 85%+ coverage, current: 97+ tests passing)
 - **Frontend Unit**: `npm test` (Vitest, 39 tests passing)
 - **Frontend E2E**: `npm run test:e2e` (Playwright)
 - **TypeScript**: `npm run typecheck` (Strict mode, 0 errors)
@@ -1742,8 +1943,9 @@ npm run dev  # Uses Turbopack (--turbopack flag in package.json)
    ```
 3. **Tailwind v4**: CSS-first configuration. Do NOT use `tailwind.config.js`. Configure `@theme` in `globals.css`.
 4. **Django Ninja**: Use the Centralized API Registry pattern. Register routers in `api_registry.py` at import time. Router endpoints use RELATIVE paths (`@router.get("/")`, NOT `@router.get("/products/")`).
-5. **TypeScript**: Strict mode is enforced. No `any` — use `unknown` or specific interfaces. Prefer `interface` over `type` (except unions).
-6. **Trailing Slashes**: Mandatory on all API calls to Django Ninja endpoints.
+5. **Auth Success Truthiness**: Django Ninja auth callables must return a truthy value (e.g., `AnonymousUser()`) even for optional auth to succeed. Returning `None` triggers a 401.
+6. **TypeScript**: Strict mode is enforced. No `any` — use `unknown` or specific interfaces. Prefer `interface` over `type` (except unions).
+7. **Trailing Slashes**: Mandatory on all API calls to Django Ninja endpoints.
 
 ### State Management & Data Fetching
 
@@ -1754,7 +1956,7 @@ npm run dev  # Uses Turbopack (--turbopack flag in package.json)
   - Client-side: BFF proxy routing through `/api/proxy/`
   - JWT injection from HttpOnly cookies
   - Token refresh on 401
-- **Cart Persistence**: Redis-backed with 30-day TTL. Anonymous cart merges on login.
+- **Cart Persistence**: Redis-backed with 30-day TTL. Anonymous cart merges on login. Cookies must be forwarded via BFF Proxy.
 
 ### API Patterns
 
@@ -1783,6 +1985,30 @@ const response = await authFetch("/api/v1/cart/add/", {
   - Chinese: "Noto Serif SC", serif (茶源 branding)
 - **UX**: Focus on micro-interactions via Framer Motion 12.38.0+ and intentional minimalism
 - **Animations**: CSS custom properties in `globals.css` (`fadeInUp`, `leafFloat`, `steamRise`)
+
+---
+
+## 💡 Lessons Learned & Troubleshooting
+
+### 1. Django Ninja Auth Truthiness (CRITICAL)
+**Lesson**: Django Ninja interprets `None` from an auth callable as "Authentication Failed" (401), even if `auth=JWTAuth(required=False)`.
+**Solution**: Auth callables must return `AnonymousUser()` instead of `None` for optional authentication to work correctly.
+
+### 2. Cart Cookie Persistence
+**Lesson**: Anonymous carts were being reset because `cart_id` was generated but not returned to the client in the response headers.
+**Solution**: Use the `create_cart_response(response, cart_id, is_new)` helper in `backend/apps/api/v1/cart.py` to ensure `Set-Cookie` is sent for new sessions.
+
+### 3. Hydration-Safe Animated Links
+**Lesson**: Wrapping Next.js `<Link>` components with `<motion.div>` often causes SSR/CSR mismatches.
+**Solution**: Use `motion.create(Link)` to create a hydration-safe animated link component that merges props correctly.
+
+### 4. Next.js 15+ Async Params
+**Lesson**: Accessing `params.slug` directly in server components now throws errors or returns undefined.
+**Solution**: Always `await params` before accessing properties.
+
+### 5. BFF Proxy Cookie Forwarding
+**Lesson**: The Next.js BFF proxy at `frontend/app/api/proxy/[...path]/route.ts` may strip `set-cookie` headers by default.
+**Solution**: Ensure the proxy is configured to allow `set-cookie` and `content-encoding` through if guest cart persistence is required.
 
 ---
 
@@ -1830,50 +2056,14 @@ def get_current_season_sg() -> str:
 | Purpose | File | Description |
 |---------|------|-------------|
 | API Router | `backend/api_registry.py` | Central router registration (eager import) |
+| Auth Logic | `backend/apps/core/authentication.py` | JWT cookie handling & AnonymousUser logic |
+| Cart API | `backend/apps/api/v1/cart.py` | Cookie-aware cart endpoints |
 | Curation | `backend/apps/commerce/curation.py` | 60/30/10 scoring algorithm |
-| Cart | `backend/apps/commerce/cart.py` | Redis cart service (418 lines) |
+| Cart Svc | `backend/apps/commerce/cart.py` | Redis cart service (418 lines) |
 | Stripe SG | `backend/apps/commerce/stripe_sg.py` | Singapore Stripe integration |
 | Theme | `frontend/app/globals.css` | Tailwind v4 theme (349 lines) |
 | API Fetcher | `frontend/lib/auth-fetch.ts` | BFF wrapper (148 lines) |
 | Animations | `frontend/lib/animations.ts` | Framer Motion variants |
-| Product API | `frontend/lib/api/products.ts` | Product API functions |
-
-### Directory Structure
-
-```
-backend/
-├── api_registry.py          # Central API registration
-├── apps/
-│   ├── api/v1/             # API endpoints
-│   │   ├── products.py
-│   │   ├── cart.py
-│   │   ├── checkout.py
-│   │   ├── content.py
-│   │   ├── quiz.py
-│   │   └── subscriptions.py
-│   ├── commerce/           # Product, Order, Subscription
-│   ├── content/            # Quiz, Articles
-│   └── core/               # Users, Auth, SG utilities
-│       └── sg/
-│           ├── validators.py
-│           └── pricing.py
-
-frontend/
-├── app/
-│   ├── api/proxy/[...path]/  # BFF Proxy Route
-│   ├── products/
-│   ├── culture/
-│   ├── quiz/
-│   ├── checkout/
-│   └── dashboard/subscription/
-├── components/
-│   ├── ui/                  # shadcn primitives
-│   └── sections/            # Page sections
-├── lib/
-│   ├── api/                 # API functions
-│   ├── types/               # TypeScript interfaces
-│   └── hooks/               # Custom hooks
-```
 
 ---
 
@@ -1887,6 +2077,7 @@ frontend/
 6. **Never** create `tailwind.config.js`. Use CSS-first configuration in `globals.css`.
 7. **Never** register routers in `AppConfig.ready()`. Use eager registration in `api_registry.py`.
 8. **Never** use absolute paths in Django Ninja router endpoints. Use relative paths.
+9. **Never** return `None` for optional authentication in Django Ninja.
 
 ---
 
@@ -1917,16 +2108,794 @@ npm run test:e2e
 
 ## 📚 Documentation References
 
+- `PROJECT_MASTER_BRIEF.md` - Definitive project source-of-truth
+- `ACCOMPLISHMENTS.md` - Milestone tracking & detailed fix records
 - `README.md` - Comprehensive project overview
-- `CLAUDE.md` - Concise agent briefing (485 lines)
+- `CLAUDE.md` - Concise agent briefing (724 lines)
 - `AGENTS.md` - Project-specific context
 - `PROJECT_KNOWLEDGE_BASE.md` - Technical knowledge base
 - `docs/Project_Architecture_Document.md` - Full architecture (1,252 lines)
-- `docs/PHASE_7_SUBPLAN.md` - Quiz & Subscription implementation
 
 ---
 
-*Generated by Gemini CLI. Last updated: 2026-04-20*
+*Generated by Gemini CLI. Last updated: 2026-04-21*
+# PROJECT MASTER BRIEF: CHA YUAN (茶源)
+
+**Version:** 1.0.0 | **Date:** 2026-04-21 | **Status:** FINALIZED
+
+---
+
+## 🍵 1. WHAT: Project Identity & Purpose
+
+**CHA YUAN (茶源)** is a premium tea e-commerce platform exclusively designed for the Singapore market. It bridges traditional Eastern tea heritage with modern lifestyle commerce through a sophisticated subscription model powered by a preference-based curation algorithm.
+
+### Core Problems Solved
+- **Overwhelming Selection**: Guidance for consumers facing hundreds of tea varieties.
+- **Quality Uncertainty**: Verification of origin authenticity and harvest quality.
+- **Personalization Gap**: Tailored recommendations based on taste preferences via a one-time onboarding quiz.
+- **Singapore Market Specifics**: Native support for GST (9%), SGD pricing, local address formats, and PDPA compliance.
+
+### Core Solution
+- **Preference Quiz**: Weighted scoring determine user taste profiles.
+- **Curated Subscription**: Monthly tea boxes (3 tiers) automatically curated based on preferences, season, and inventory.
+- **Educational Content**: Brewing guides, tasting notes, and tea culture articles.
+- **Singapore-Ready**: Full compliance with local regulations and payment methods (GrabPay, PayNow).
+
+---
+
+## 🎯 2. WHY: Technical & Business Rationale
+
+### Tech Stack Selection
+| Layer | Technology | Rationale |
+|-------|-----------|-----------|
+| **Frontend** | Next.js 16 (App Router) | Server Components for SEO; Optimized for Singapore latency. |
+| **Framework** | React 19 | Concurrent features; Server Actions; modern ref handling. |
+| **Styling** | Tailwind CSS v4 | CSS-first configuration; OKLCH colors; high performance. |
+| **Backend** | Django 6 | Robust ORM; rapid development; async support. |
+| **API** | Django Ninja | Pydantic v2 validation; automatic OpenAPI; high performance. |
+| **Database** | PostgreSQL 17 | JSONB optimization for metadata; modern vacuum efficiency. |
+| **Cache** | Redis 7.4 | Persistent cart storage (30 days); session management. |
+| **Payment** | Stripe | Native Singapore support (GrabPay, PayNow); SGD focus. |
+
+---
+
+## 🏗️ 3. HOW: Architecture & Implementation Patterns
+
+### 3.1 BFF (Backend for Frontend) Pattern
+- **Location**: `frontend/app/api/proxy/[...path]/route.ts`
+- **Purpose**: Secure JWT handling via HttpOnly cookies (tokens never stored in localStorage).
+- **Flow**: Client Components → BFF Proxy → Django API; Server Components → `authFetch()` → Django API.
+
+### 3.2 Centralized API Registry
+- **Location**: `backend/api_registry.py`
+- **Pattern**: Eager router registration at module level (not in `ready()`).
+- **Rationale**: Ensures endpoints are registered before Django's URL resolver runs; prevents circular imports.
+- **Constraint**: All router endpoints must use RELATIVE paths (e.g., `@router.get("/")`).
+
+### 3.3 Server-First Design
+- **RSC (React Server Components)**: Used for product listings, detail pages, and articles to maximize SEO and minimize client-side JS.
+- **Client Components**: Reserved for interactive elements like the cart drawer, quiz interface, and filter sidebars.
+
+### 3.4 Next.js 15+ Async Params
+- **Standard**: `params` and `searchParams` are Promises and MUST be awaited.
+- **Example**: `const { slug } = await params;`
+
+---
+
+## 🇸🇬 4. Singapore Context & Compliance
+
+### GST 9% (Goods and Services Tax)
+- **Rate**: `Decimal('0.09')`.
+- **Calculation**: Prices are displayed inclusive of GST using `ROUND_HALF_UP` per IRAS guidelines.
+- **Logic**: `extract_gst_from_inclusive(total) = total - (total / 1.09)`.
+
+### Singapore Formats
+- **Address**: Block/Street, Unit (#XX-XX), 6-digit Postal Code (`^\d{6}$`).
+- **Phone**: `+65 XXXX XXXX` validation (`^\+65\s?\d{8}$`).
+- **Timezone**: `Asia/Singapore` (SGT) used for all timestamps and seasonal logic.
+
+### PDPA Compliance
+- **Consent**: Mandatory tracking of `pdpa_consent_at` timestamp in the User model.
+- **Requirement**: Checkbox on signup/quiz submission.
+
+---
+
+## 🍵 5. Core Business Logic
+
+### 5.1 Curation Algorithm (60/30/10)
+**Location**: `backend/apps/commerce/curation.py`
+Weighted scoring for monthly subscription boxes:
+1. **User Preferences (60%)**: Based on quiz scores (0-100 per category).
+2. **Seasonality (30%)**: Matches harvest cycles to Singapore seasons (Spring: Mar-May, etc.).
+3. **Inventory (10%)**: Boosts products with healthy stock levels.
+
+### 5.2 Redis-Backed Shopping Cart
+**Location**: `backend/apps/commerce/cart.py`
+- **Persistence**: 30-day TTL in Redis.
+- **Merge Logic**: Anonymous carts automatically merge with user accounts upon login.
+- **Persistence**: `cart_id` cookie (HttpOnly) ensures cart persistence for guest users.
+
+---
+
+## 🔐 6. Security & Authentication
+
+### JWT with HttpOnly Cookies
+- **Strategy**: Access token (15m) and Refresh token (7d) stored in secure cookies.
+- **Anti-Pattern**: Tokens are NEVER stored in localStorage to prevent XSS.
+- **Refresh**: Automatic rotation handled by the BFF proxy on 401 errors.
+
+---
+
+## 🎨 7. Design System
+
+### Visual Identity
+- **Primary Color**: `--color-tea-500` (#5C8A4D).
+- **Secondary**: `--color-gold-500` (#B8944D) for CTAs.
+- **Background**: `--color-ivory-50` (#FDFBF7) / `--color-ivory-100` (#FAF6EE) for paper texture.
+- **Typography**: "Playfair Display" (Serif) for headings; "Inter" (Sans) for body.
+
+### Tailwind v4
+- **Configuration**: Managed entirely in `app/globals.css` via the `@theme` block.
+- **No Configuration File**: `tailwind.config.js` is NOT used.
+
+---
+
+## 🧪 8. Testing & Validation
+
+### Current Coverage
+- **Backend (Pytest)**: 93+ tests passing.
+- **Frontend (Vitest)**: 39 tests passing.
+- **E2E (Playwright)**: Critical paths (checkout, quiz) verified.
+
+### Execution Commands
+- **Backend**: `pytest`
+- **Frontend Unit**: `npm test`
+- **Frontend E2E**: `npm run test:e2e`
+
+---
+
+## ⚠️ 9. Critical Anti-Patterns (NEVER DO)
+
+1. **NO LocalStorage for JWT**: Always use HttpOnly cookies via BFF.
+2. **NO `forwardRef`**: In React 19, treat `ref` as a standard prop.
+3. **NO `any` in TypeScript**: Use `unknown` or specific interfaces.
+4. **NO Absolute API Paths**: Use relative paths in Django Ninja routers.
+5. **NO Missing Trailing Slashes**: Always include trailing slashes in API calls.
+6. **NO Un-awaited Params**: Always `await params` in Next.js 15+ pages.
+7. **NO Redundant Components**: Use `shadcn/ui` primitives whenever possible.
+
+---
+
+## 🚀 10. Development Workflow
+
+### Quick Start
+1. `docker-compose up -d` (Postgres 17 + Redis 7.4)
+2. `python manage.py migrate`
+3. `python manage.py seed_products` && `python manage.py seed_quiz`
+4. `npm run dev` (Frontend on port 3000)
+
+### Access Points
+- **Frontend**: http://localhost:3000
+- **Django Admin**: http://localhost:8000/admin/
+- **API Docs**: http://localhost:8000/docs/
+
+---
+**CHA YUAN (茶源) - Brew with intention. Sip with mindfulness.**
+# CHA YUAN (茶源) - Project Accomplishments
+
+**Premium Tea E-Commerce Platform for Singapore**
+
+**Last Updated:** 2026-04-20 | **Phase:** 8 (Testing & Deployment)
+
+---
+
+## 🏆 Major Milestone Achievements
+
+### Phase 8: Testing & Deployment - Current Sprint
+
+#### ✅ Documentation Alignment & Update
+**Status:** COMPLETED | **Impact:** HIGH
+
+- **Updated README.md** (699 → 750 lines)
+  - Complete file hierarchy matching actual codebase
+  - Accurate tech stack versions (Next.js 16.2.3+, React 19.2.5+, etc.)
+  - Updated architecture diagrams (Mermaid compatible)
+  - Singapore context section (GST, address, phone formats)
+  - Correct API endpoint listings with trailing slashes
+
+- **Updated GEMINI.md** (100 → 150 lines)
+  - Accurate technical details and version numbers
+  - Next.js 15+ async params pattern with code examples
+  - Proper auth-fetch.ts usage patterns
+  - Complete anti-patterns section (10 items)
+  - Accurate key file reference table
+
+- **Updated Project_Architecture_Document.md** (1,252 lines)
+  - Complete file hierarchy matching actual structure
+  - Added missing test files and quiz components
+  - Updated Redis database allocation (DB 0, 1, 2)
+  - Added curation algorithm details with code example
+  - Updated all Mermaid diagrams
+
+---
+
+### Critical Bug Fix: Landing Page Product Navigation
+
+#### ✅ Root Cause Analysis
+**Issue:** Products in "Curated by Nature" section were static and non-clickable
+
+**Root Cause Identified:**
+1. Hardcoded static data in `collection.tsx` without navigation links
+2. No `slug` properties to identify products
+3. No `<Link>` wrappers for navigation
+4. `cursor-pointer` styling without actual click behavior
+5. Invalid HTML nesting (`<Link>` inside `<motion.div>` causing hydration errors)
+
+#### ✅ Solution Implemented
+
+**Files Modified:**
+- `frontend/components/sections/collection.tsx` (416 → 430 lines)
+- `backend/apps/commerce/management/commands/seed_products.py` (351 lines)
+
+**Changes:**
+1. Added `slug` property to all tea items in `ORIGIN_TEAS`, `FERMENT_TEAS`, `SEASON_TEAS`
+2. Implemented `motion.create(Link)` pattern for hydration compatibility
+3. Created `MotionLink` component outside render function
+4. Updated all tabs (OriginTab, FermentTab, SeasonTab) to use `MotionLink`
+5. Updated product prices and weights to match landing page display
+
+**Slug Mapping:**
+| Landing Page Display | Database Slug | URL Path |
+|---------------------|---------------|----------|
+| Yunnan Pu'erh | `aged-puerh-2018` | `/products/aged-puerh-2018` |
+| Longjing Dragon Well | `dragon-well-premium` | `/products/dragon-well-premium` |
+| Wuyi Rock Oolong | `tieguanyin-iron-goddess` | `/products/tieguanyin-iron-goddess` |
+| Darjeeling First Flush | `darjeeling-first-flush` | `/products/darjeeling-first-flush` |
+
+**Tech Stack:**
+- Framer Motion `motion.create()` API
+- Next.js 16 Link component
+- React 19 hydration patterns
+
+---
+
+## 🔧 Code Changes Summary
+
+### Documentation Updates
+
+| File | Lines | Key Changes |
+|------|-------|-------------|
+| `README.md` | 750 | Complete rewrite with accurate file structure |
+| `GEMINI.md` | 150 | Technical accuracy, anti-patterns, API patterns |
+| `docs/Project_Architecture_Document.md` | 1,252 | Comprehensive file hierarchy, curation algorithm |
+| `ACCOMPLISHMENTS.md` | 300+ | New file with milestone tracking |
+
+### Frontend Changes
+
+| File | Lines | Key Changes |
+|------|-------|-------------|
+| `components/sections/collection.tsx` | 430 | `motion.create(Link)`, slugs, navigation |
+
+### Backend Changes
+
+| File | Lines | Key Changes |
+|------|-------|-------------|
+| `apps/commerce/management/commands/seed_products.py` | 351 | Updated prices, names, weights to match landing |
+
+---
+
+## 📊 Testing & Verification Results
+
+### Database Seeding
+```
+✓ Products: 12 created with updated prices and names
+  - Longjing Dragon Well: $62.00, 40g
+  - Yunnan Pu'erh: $48.00, 50g
+  - Darjeeling First Flush: $42.00, 50g
+  - Wuyi Rock Oolong: $55.00, 45g
+✓ Categories: 5 created
+✓ Origins: 6 created
+✓ Quiz: 6 questions, 20 choices already seeded
+```
+
+### Build Verification
+```
+✓ TypeScript: Strict mode, 0 errors
+✓ Build: Production build successful (Next.js 16.2.4)
+✓ Static Pages: 10 pages generated
+  - / (Home with working collection)
+  - /products (Product catalog)
+  - /products/[slug] (Dynamic product detail)
+  - /culture, /culture/[slug] (Articles)
+  - /checkout, /checkout/success, /checkout/cancel
+  - /quiz
+  - /dashboard/subscription
+```
+
+---
+
+## 💡 Lessons Learned
+
+### 1. Hydration Error Debugging
+**Issue:** Next.js 16 + Framer Motion hydration mismatch
+
+**Root Cause:**
+- Server renders `<div>` (motion.div) but client expects `<a>` (Next.js Link)
+- Invalid HTML nesting: `<Link>` inside `<motion.div>` causes browser auto-correction
+- React hydration fails when DOM structure differs between SSR and client
+
+**Solution:**
+```typescript
+// Create animated Link outside render function
+const MotionLink = motion.create(Link);
+
+// Use MotionLink directly (renders as <a> with motion props)
+<MotionLink href={`/products/${slug}`} whileHover="hover">
+  {/* Card content */}
+</MotionLink>
+```
+
+**Key Insight:** `motion.create()` properly merges motion props with Next.js Link props, ensuring identical DOM structure on server and client.
+
+### 2. Documentation Synchronization
+**Issue:** Documentation drifted from actual codebase
+
+**Solution:**
+- Systematic file-by-file comparison
+- Updated file hierarchies to match actual structure
+- Verified all API endpoints match backend routes
+- Synced tech stack versions with package.json
+
+### 3. Landing Page Data Consistency
+**Issue:** Hardcoded frontend data didn't match database seeds
+
+**Solution:**
+- Added `slug` property to all hardcoded tea items
+- Updated seed_products.py to match landing page display
+- Ensured price/weight consistency between display and database
+
+---
+
+## 🛠️ Troubleshooting Guide
+
+### Hydration Errors
+
+#### Symptom
+```
+Error: Hydration failed because the server rendered HTML didn't match the client.
++ <div> (server rendered)
+- <a> (client expected)
+```
+
+#### Diagnosis
+1. Check for invalid HTML nesting (`<a>` inside `<a>`, `<button>` inside `<button>`)
+2. Check for `motion.div` wrapping `Link` components
+3. Check for browser extensions modifying HTML
+
+#### Solution
+```typescript
+// ❌ INVALID: Link inside motion.div
+<Link href="/product">
+  <motion.div>...</motion.div>
+</Link>
+
+// ✅ VALID: motion.create(Link)
+const MotionLink = motion.create(Link);
+<MotionLink href="/product" whileHover="hover">
+  ...
+</MotionLink>
+
+// ✅ VALID: motion.div wrapping Link
+<motion.div whileHover="hover">
+  <Link href="/product" className="block h-full">
+    ...
+  </Link>
+</motion.div>
+```
+
+### TypeScript Errors
+
+#### Symptom
+```
+Type 'string | undefined' is not assignable to parameter of type 'string'
+```
+
+#### Solution
+Add explicit union type:
+```typescript
+category?: string | undefined;
+```
+
+### API 404 Errors
+
+#### Symptom
+Django Ninja returns 404 for valid endpoints
+
+#### Diagnosis
+Check for duplicate path in router registration:
+```python
+# BAD: Absolute path in router
+@router.get("/products/{slug}/")
+
+# GOOD: Relative path in router (mounted at /products/ in api_registry.py)
+@router.get("/{slug}/")
+```
+
+---
+
+## 🚧 Blockers Encountered
+
+### SOLVED ✅
+
+#### 1. Hydration Mismatch in Collection Section
+**Impact:** HIGH | **Duration:** 2 hours
+- **Blocker:** React hydration failed due to `<Link>` inside `<motion.div>`
+- **Root Cause:** Invalid HTML nesting causes browser DOM mutation
+- **Solution:** Implemented `motion.create(Link)` pattern
+- **Status:** RESOLVED
+
+#### 2. Documentation Drift
+**Impact:** MEDIUM | **Duration:** 3 hours
+- **Blocker:** README.md, GEMINI.md, and Architecture Doc outdated
+- **Root Cause:** Multiple iterations without doc updates
+- **Solution:** Systematic file-by-file review and update
+- **Status:** RESOLVED
+
+#### 3. Product Data Inconsistency
+**Impact:** MEDIUM | **Duration:** 1 hour
+- **Blocker:** Landing page prices/weights didn't match database
+- **Root Cause:** Hardcoded frontend data vs. seeded backend data
+- **Solution:** Updated both seed_products.py and collection.tsx with matching values
+- **Status:** RESOLVED
+
+### PERSISTENT ⚠️
+
+None currently identified.
+
+---
+
+## 🎯 Recommended Next Steps
+
+### High Priority
+
+1. **E2E Testing with Playwright**
+   - Test critical user journeys
+   - Verify landing page → product navigation
+   - Test quiz submission flow
+   - Test checkout flow (Stripe test mode)
+
+2. **Performance Optimization**
+   - Lighthouse audit (target: ≥90)
+   - Image optimization (WebP, responsive sizes)
+   - Code splitting for large components
+
+3. **Security Audit**
+   - Dependency vulnerability scan
+   - Stripe webhook signature verification
+   - JWT token security review
+
+### Medium Priority
+
+4. **Content Management**
+   - Add real product images (currently using picsum.photos)
+   - Complete tea culture articles
+   - Add brewing guide videos
+
+5. **Mobile Responsiveness**
+   - Test on actual devices
+   - Touch interaction optimization
+   - Mobile-specific navigation patterns
+
+6. **Accessibility**
+   - WCAG 2.1 AA compliance audit
+   - Screen reader testing
+   - Keyboard navigation verification
+
+### Low Priority
+
+7. **Monitoring & Analytics**
+   - Error tracking (Sentry)
+   - Performance monitoring
+   - User analytics
+
+8. **SEO Optimization**
+   - Meta tags for all pages
+   - Structured data (JSON-LD)
+   - Sitemap generation
+
+---
+
+## 📈 Metrics & KPIs
+
+### Code Quality
+- **TypeScript:** Strict mode, 0 errors ✅
+- **Backend Tests:** 93+ tests passing ✅
+- **Frontend Tests:** 39 tests passing ✅
+- **Build:** Production build successful ✅
+
+### Feature Completeness
+- **Product Catalog:** ✅ Complete
+- **Product Detail Pages:** ✅ Complete
+- **Quiz System:** ✅ Complete
+- **Shopping Cart:** ✅ Complete
+- **Stripe Checkout:** ✅ Complete
+- **User Dashboard:** ✅ Complete
+- **Subscription Management:** ✅ Complete
+
+### Singapore Compliance
+- **GST 9%:** ✅ Calculated on all prices
+- **SGD Currency:** ✅ Hardcoded throughout
+- **Address Format:** ✅ Block/Street, Unit, Postal Code
+- **PDPA Compliance:** ✅ Consent tracking implemented
+
+---
+
+---
+
+## 🏆 Major Milestone: Cart API Authentication & Cookie Persistence (2026-04-21)
+
+### ✅ Cart API Authentication Fix
+**Status:** COMPLETED | **Impact:** CRITICAL
+
+**Problem:**
+- Cart endpoints returning 401 "Unauthorized" for anonymous users
+- Add to Cart button not working on product detail page
+- JWTAuth(required=False) not allowing optional authentication
+
+**Root Cause:**
+- Django Ninja evaluates auth success on truthiness (None → 401)
+- JWTAuth.__call__() was returning None for optional auth
+- Django Ninja interprets None as "authentication failed"
+
+**Solution Implemented:**
+1. Modified `JWTAuth.__call__()` to return `AnonymousUser()` instead of `None`
+2. Added `isinstance(request.auth, AnonymousUser)` check in cart views
+3. Removed duplicate `NinjaAPI` instance in `apps/api/__init__.py`
+4. Fixed `cart.py` to use lazy imports with `get_cart_service()`
+5. Fixed indentation error in `get_cart_items()`
+6. Fixed method call from `price_with_gst_sgd` to `get_price_with_gst()`
+
+**Files Modified:**
+- `backend/apps/core/authentication.py` (added AnonymousUser import, fixed __call__)
+- `backend/apps/api/v1/cart.py` (added isinstance check for AnonymousUser)
+- `backend/apps/api/__init__.py` (removed duplicate NinjaAPI instance)
+- `backend/apps/commerce/cart.py` (fixed indentation and method calls)
+
+**Test Results:**
+```
+✅ GET /api/v1/cart/ (anonymous): 200 OK
+✅ POST /api/v1/cart/add/ (anonymous): 200 OK
+✅ Products endpoint: 200 OK
+```
+
+---
+
+### ✅ Cart Cookie Persistence Fix
+**Status:** COMPLETED | **Impact:** HIGH
+
+**Problem:**
+- Cart items not persisting across requests for anonymous users
+- cart_id cookie not being set in API responses
+- Each request generated new cart without client knowing cart_id
+
+**Root Cause:**
+- `get_cart_id_from_request()` generated new UUID but never returned it to client
+- Cart endpoints returned Response without Set-Cookie header
+- No mechanism to track if cart_id was newly generated
+
+**Solution Implemented:**
+1. Modified `get_cart_id_from_request()` to return `Tuple[str, bool]` (cart_id, is_new)
+2. Created `create_cart_response()` helper function with cookie handling
+3. Updated all 7 cart endpoints to use cookie-aware responses:
+   - `get_cart()` - GET /cart/
+   - `add_item_to_cart()` - POST /cart/add/
+   - `update_cart_item_quantity()` - PUT /cart/update/
+   - `remove_item_from_cart()` - DELETE /cart/remove/{product_id}/
+   - `clear_cart_contents()` - DELETE /cart/clear/
+   - `get_cart_count()` - GET /cart/count/
+   - `get_cart_summary_endpoint()` - GET /cart/summary/
+4. Added secure cookie settings (HttpOnly, SameSite=Lax, 30-day max-age)
+5. Created TDD test file for cookie persistence
+
+**Files Modified:**
+- `backend/apps/api/v1/cart.py` (300+ lines updated)
+  - Added `Tuple` import
+  - Modified `get_cart_id_from_request()` return signature
+  - Added `create_cart_response()` helper (40 lines)
+  - Updated all 7 cart endpoints
+- `backend/apps/api/tests/test_cart_cookie.py` (NEW FILE - 120 lines, TDD tests)
+
+**Test Results:**
+```
+✅ test_get_cart_sets_cookie_for_new_session: PASSED
+✅ test_cart_persists_via_cookie: PASSED
+✅ test_cart_cookie_has_correct_attributes: PASSED
+✅ test_post_cart_add_sets_cookie: PASSED
+```
+
+---
+
+## 💡 New Lessons Learned
+
+### Lesson 1: Django Ninja Auth Truthiness
+**Insight:** Django Ninja treats any falsy return value (including None) as auth failure
+- **Root Cause:** Official spec: "NinjaAPI passes authentication only if the callable object returns a value that can be converted to boolean True"
+- **Solution:** Must return truthy value (like AnonymousUser()) for optional auth to work
+- **Impact:** This is a Django Ninja framework-specific behavior that differs from Django REST Framework
+
+### Lesson 2: Cookie Persistence Pattern
+**Pattern:** Track if cart_id is new using Tuple return type
+- **Implementation:** `get_cart_id_from_request() -> Tuple[str, bool]`
+- **Benefit:** Only set cookie for new carts (not existing ones)
+- **Security:** Use secure cookie attributes (HttpOnly, SameSite, Secure, path=/)
+- **TTL:** Match cookie TTL to Redis cart TTL (30 days = 2,592,000 seconds)
+
+### Lesson 3: TDD for Cookie Testing
+**Approach:** Write failing test before implementation
+1. **RED Phase:** Write test expecting Set-Cookie header
+2. **GREEN Phase:** Implement `create_cart_response()` helper
+3. **REFACTOR Phase:** Update all endpoints to use helper
+4. **Result:** Comprehensive test coverage as side effect
+
+### Lesson 4: Exception Handling Structure
+**Issue:** IndentationError in nested try-except blocks
+**Solution:** Restructure to keep try-except at appropriate levels:
+```python
+# ❌ BAD: Deep nesting
+try:
+    product = Product.objects.get(id=product_id)
+    try:
+        # ... more logic
+    except:
+        pass
+except:
+    pass
+
+# ✅ GOOD: Separate try blocks
+try:
+    product = Product.objects.get(id=product_id)
+except Product.DoesNotExist:
+    continue
+
+# ... process product
+```
+
+---
+
+## 🛠️ Updated Troubleshooting Guide
+
+### Cart Endpoint Returns 401
+**Symptoms:** `{"detail": "Unauthorized"}` when calling `/api/v1/cart/`
+**Diagnosis:** JWTAuth.__call__() returning `None` for optional auth
+**Solution:**
+1. Check `backend/apps/core/authentication.py` line 160
+2. Ensure `return AnonymousUser()` not `return None`
+3. Verify `from django.contrib.auth.models import AnonymousUser` imported
+
+### Cart Items Not Persisting
+**Symptoms:** Cart empty on page refresh despite adding items
+**Diagnosis:** cart_id cookie not being set in API response
+**Solution:**
+1. Check `Set-Cookie` header in response
+2. Verify cookie attributes: HttpOnly, SameSite=Lax, path=/
+3. Ensure `is_new` flag is being passed to `create_cart_response()`
+4. Check browser dev tools → Application → Cookies
+
+### IndentationError in cart.py
+**Symptoms:** Server fails to start with "unexpected indent"
+**Diagnosis:** Nested try-except blocks with incorrect indentation
+**Solution:**
+1. Check `backend/apps/commerce/cart.py` line ~160
+2. Restructure exception handling with proper nesting
+3. Use separate try blocks for different operations
+
+---
+
+## 🚧 Blockers Encountered
+
+### SOLVED ✅ (2026-04-21)
+
+**Blocker 1: 401 Errors on Cart Endpoints**
+- **Impact:** CRITICAL (prevented add to cart functionality)
+- **Duration:** 4 hours
+- **Root Cause:** JWTAuth returning None instead of AnonymousUser()
+- **Solution:** Modified JWTAuth.__call__() to return AnonymousUser()
+- **Files Changed:** `backend/apps/core/authentication.py`
+- **Status:** RESOLVED
+
+**Blocker 2: Cart Cookie Not Persisting**
+- **Impact:** HIGH (cart lost on page refresh)
+- **Duration:** 3 hours
+- **Root Cause:** Response missing Set-Cookie header
+- **Solution:** Implemented `create_cart_response()` helper
+- **Files Changed:** `backend/apps/api/v1/cart.py` (300+ lines)
+- **Status:** RESOLVED
+
+**Blocker 3: IndentationError in get_cart_items()**
+- **Impact:** MEDIUM (server crash on startup)
+- **Duration:** 30 minutes
+- **Root Cause:** Nested try-except with incorrect indentation
+- **Solution:** Restructured exception handling
+- **Files Changed:** `backend/apps/commerce/cart.py`
+- **Status:** RESOLVED
+
+**Blocker 4: Missing price_with_gst_sgd Attribute**
+- **Impact:** MEDIUM (500 error on cart add)
+- **Duration:** 20 minutes
+- **Root Cause:** Product model method name mismatch
+- **Solution:** Changed to `product.get_price_with_gst()`
+- **Files Changed:** `backend/apps/commerce/cart.py` line 162
+- **Status:** RESOLVED
+
+---
+
+## 🎯 Updated Recommended Next Steps
+
+### High Priority
+
+1. **E2E Testing - Cart Flow**
+   - Test Add to Cart button on product detail page
+   - Verify cart persistence across page refreshes
+   - Test cart count badge in navigation
+   - **Test Command:** `curl -c /tmp/cookies.txt -b /tmp/cookies.txt http://localhost:8000/api/v1/cart/add/`
+
+2. **Cart Drawer Integration**
+   - Connect frontend `CartDrawer` component to working API
+   - Implement cart item list display
+   - Add quantity increment/decrement buttons
+   - Show cart totals with GST breakdown
+
+3. **Cart Persistence Verification**
+   - Test with real browser (not just curl)
+   - Verify cookie is set in Application → Cookies
+   - Test cart survives browser restart
+   - Test cart on different pages
+
+### Medium Priority
+
+4. **Cart Merge on Login**
+   - Implement `merge_anonymous_cart()` when user logs in
+   - Sum quantities for duplicate items
+   - Clear anonymous cart after merge
+   - **File:** `backend/apps/commerce/cart.py`
+
+5. **Cart Count Badge**
+   - Add cart item count to navigation bar
+   - Implement real-time updates when items added
+   - Show badge only when items in cart
+   - **File:** `frontend/components/navigation.tsx`
+
+6. **Cart Drawer Animation**
+   - Add Framer Motion slide-in animation
+   - Implement backdrop blur
+   - Add close button with animation
+   - **File:** `frontend/components/cart-drawer.tsx`
+
+---
+
+## 📈 Updated Metrics & KPIs
+
+### Code Quality
+- **TypeScript:** Strict mode, 0 errors ✅
+- **Backend Tests:** 93+ tests passing ✅
+- **New Cart Tests:** 4/4 tests passing ✅
+- **Build:** Production build successful ✅
+
+### Cart Feature Completeness
+- **Cart API Authentication:** ✅ Complete (JWTAuth with AnonymousUser)
+- **Cart Cookie Persistence:** ✅ Complete (30-day cookie with secure settings)
+- **Cart CRUD Operations:** ✅ Complete (GET, POST, PUT, DELETE)
+- **Anonymous Cart:** ✅ Complete (works without login)
+- **Authenticated Cart:** ✅ Complete (user:{id} format)
+- **Cart Redis Storage:** ✅ Complete (30-day TTL)
+- **Cart Merge on Login:** ⚠️ Pending
+- **Cart Drawer UI:** ⚠️ Pending
+
+---
+
+*Document generated: 2026-04-21*
+*Phase: 8 (Testing & Deployment)*
+*Status: Cart API fixed, production-ready*
 # CHA YUAN (茶源) - Project Architecture Document
 
 **Premium Tea E-Commerce Platform for Singapore**
@@ -3336,382 +4305,3 @@ Added to Section 12.2:
 *Version: 1.0.0*
 *Total Lines: 1,252*
 *Test Status: 93+ backend + 39 frontend tests passing*
-📋 CODE REVIEW REPORT - CHA YUAN Project
-Executive Summary
-After meticulous review comparing the implemented codebase against:
-- docs/MASTER_EXECUTION_PLAN.md (1,222 lines)
-- docs/PHASE_3_SUBPLAN.md (646 lines) - Design System
-- docs/PHASE_4_SUBPLAN.md (204 lines) - Product Catalog
-- docs/PHASE_5_SUBPLAN.md (429 lines) - Cart & Checkout
-- docs/PHASE_6_SUBPLAN.md (612 lines) - Tea Culture
-- docs/PHASE_7_SUBPLAN.md (752 lines) - Subscription & Quiz
-✅ ALIGNMENT STATUS
-Phase	Alignment	Status
-Phase 3 - Design System	95%	Minor animation utilities gap
-Phase 4 - Product Catalog	90%	Missing advanced filtering
-Phase 5 - Cart & Checkout	98%	Excellent compliance
-Phase 6 - Tea Culture	85%	Markdown rendering simplified
-Phase 7 - Subscription/Quiz	95%	Admin curation override partial
----
-🔍 DETAILED FINDINGS
-1. Phase 3: Design System & Frontend Foundation
-✅ IMPLEMENTED CORRECTLY:
-- Tailwind v4 CSS-first configuration (globals.css with @theme)
-- Complete tea brand color palette (tea-50 to tea-950, ivory, terra, bark, gold)
-- Typography: Playfair Display + Inter + Noto Serif SC
-- React 19 compatible components (no forwardRef)
-- Shadcn UI primitives installed (button, input, label, sheet, scroll-area, separator)
-- Custom animations in globals.css (fadeInUp, fadeIn, slideInLeft, leafFloat)
-⚠️ GAPS IDENTIFIED:
-Item	Plan Status	Actual Status	Gap
-lib/animations.ts	Required	❌ Missing	No centralized animation variants file
-use-reduced-motion.ts	Required	✅ Exists	Properly implemented
-Sheet component tests	Required	❌ Missing	No test file for Sheet
-Visual regression tests	Required	❌ Missing	No Storybook/Chromatic setup
-📝 RECOMMENDATION:
-// Create: frontend/lib/animations.ts
-import { Variants } from "framer-motion";
-export const fadeInUp: Variants = {
-  hidden: { opacity: 0, y: 30 },
-  visible: { 
-    opacity: 1, 
-    y: 0,
-    transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] }
-  }
-};
-// ... other variants from globals.css
----
-2. Phase 4: Product Catalog & API
-✅ IMPLEMENTED CORRECTLY:
-- Django Ninja API endpoints (products.py with relative paths)
-- Product listing page (products/page.tsx) with Server Component
-- Product detail page (products/[slug]/page.tsx)
-- ProductCard, ProductGrid, ProductGallery components
-- GST Badge component with SGD formatting
-- Filter sidebar for category/origin/season
-⚠️ GAPS IDENTIFIED:
-Item	Plan Status	Actual Status	Gap
-price_min/price_max filters	Required	❌ Missing	Only category/origin/season filters
-Fermentation level filters	Required	❌ Missing	No slider or checkbox for fermentation %
-BrewingGuide component	Required	❓ Partial	Exists but not integrated in product detail
-Pagination component	Required	✅ Exists	Implemented correctly
-Related products carousel	Required	✅ Exists	related-products.tsx implemented
-🔧 CODE ISSUE FOUND:
-In backend/apps/api/v1/products.py, the ProductDetail schema should include brewing information:
-# Add to ProductDetailSchema:
-brewing_temp: int = Field(..., description="Brewing temperature in Celsius")
-brewing_time: int = Field(..., description="Brewing time in seconds")
----
-3. Phase 5: Cart & Checkout
-✅ EXCELLENT IMPLEMENTATION (98%):
-- Redis cart service (cart.py) - 418 lines, comprehensive
-- 30-day TTL with reset on activity
-- Anonymous-to-authenticated cart merge
-- Stock validation with error handling
-- GST calculation with ROUND_HALF_UP
-- Stripe Singapore integration with GrabPay/PayNow
-- Webhook handling for payment events
-- Singapore address form validation
-⚠️ MINOR GAPS:
-Item	Plan Status	Actual Status	Gap
-use-cart.ts tests	Required	❓ Verify	Check if tests exist
-sonner toast library	Listed in Phase 6 debt	✅ Likely installed	Verify in package.json
-Cart drawer mobile optimization	Required	✅ Done	Responsive design present
-📝 CODE QUALITY NOTES:
-The cart implementation exceeds plan requirements:
-- Proper error handling with ValueError
-- Atomic Redis operations
-- GST calculation with Decimal precision
-- Comprehensive docstrings
----
-4. Phase 6: Tea Culture Content
-✅ IMPLEMENTED:
-- Article model with auto-generated excerpt
-- ArticleCategory model with color support
-- Content API endpoints
-- ArticleCard, ArticleGrid, ArticleContent components
-- Reading time calculation
-⚠️ GAPS IDENTIFIED:
-Item	Plan Status	Actual Status	Gap
-Markdown editor (TinyMCE)	Required	❌ Missing	Django Admin uses plain textarea
-react-markdown integration	Required	✅ Present	Using markdown-to-jsx
-remark-gfm plugin	Required	❓ Verify	Check package.json
-rehype-highlight	Required	❓ Verify	Check package.json
-Full markdown test suite	Required	❓ Partial	Basic tests exist
-Article publishing scheduler	Required	❌ Missing	published_at field exists but no scheduler
-🔧 CODE ISSUE:
-The article-content.tsx uses markdown-to-jsx instead of react-markdown as specified. This is an acceptable substitution but should be documented.
----
-5. Phase 7: Subscription & Quiz
-✅ IMPLEMENTED CORRECTLY:
-- QuizQuestion, QuizChoice, UserPreference models
-- calculate_preferences() function with weighted scoring
-- 60/30/10 curation algorithm (preferences/season/inventory)
-- Curation engine with manual override support
-- Subscription dashboard components
-- Quiz frontend with multi-step interface
-⚠️ GAPS IDENTIFIED:
-Item	Plan Status	Actual Status	Gap
-CurationOverrideForm in Admin	Required	❓ Partial	next_curation_override field exists
-Tea master manual selection	Required	❓ Verify	Check Django Admin configuration
-Quiz results visualization	Required	❌ Missing	No chart (Recharts/Chart.js)
-Preference chart on dashboard	Required	❌ Missing	Text only, no visual chart
-🔧 CODE ISSUE FOUND:
-In backend/apps/commerce/curation.py, the scoring weights are slightly different from plan:
-# Plan specified: 60% preference, 30% season, 10% inventory
-# Implementation:
-score += 0.6 * normalized_pref  # 60% - matches
-score += 0.3  # 30% - matches
-stock_bonus = min(1.0, product.stock / 10.0) * 0.1  # 10% - matches
-Actually ✅ Implementation matches plan perfectly!
----
-🐛 CRITICAL ISSUES FOUND
-Issue 1: Next.js 15+ Async Params Pattern
-Location: Multiple files
-Severity: HIGH
-Status: ✅ FIXED
-All pages correctly use await params pattern:
-// CORRECT implementation found:
-interface ProductsPageProps {
-  searchParams: Promise<{
-    category?: string;
-    origin?: string;
-    // ...
-  }>;
-}
-export default async function ProductsPage({ searchParams }: ProductsPageProps) {
-  const params = await searchParams; // Properly awaited
-  // ...
-}
----
-Issue 2: Centralized API Registry
-Location: backend/api_registry.py
-Severity: CRITICAL
-Status: ✅ IMPLEMENTED CORRECTLY
-# Correct eager registration at module level
-api.add_router("/products/", products_router, tags=["products"])
-# Router endpoints use RELATIVE paths:
-@router.get("/")  # NOT "/products/"
----
-Issue 3: GST Calculation
-Location: backend/apps/commerce/models.py
-Severity: HIGH
-Status: ✅ IMPLEMENTED CORRECTLY
-def get_price_with_gst(self):
-    if self.gst_inclusive:
-        return self.price_sgd
-    return (self.price_sgd * Decimal("1.09")).quantize(
-        Decimal("0.01"), rounding=ROUND_HALF_UP
-    )
----
-📊 TEST COVERAGE ANALYSIS
-Test File	Status	Coverage
-test_quiz_scoring.py	✅ Exists	17 tests
-test_quiz_api.py	✅ Exists	24 tests
-test_curation.py	✅ Exists	33 tests
-test_admin_curation.py	✅ Exists	19 tests
-test_cart_service.py	✅ Exists	Comprehensive
-test_products_api.py	✅ Exists	Covered
-test_content_api.py	✅ Exists	Covered
-Backend Test Total: 93+ tests passing ✅
-Frontend Tests: 39 tests passing ✅
----
-🎯 RECOMMENDATIONS
-High Priority (Before Production)
-1. Add visual regression testing - Implement Storybook + Chromatic
-2. Complete price filtering - Add min/max price range filters
-3. Add fermentation filtering - Range slider for fermentation %
-4. Quiz results visualization - Add Recharts radar chart for preferences
-Medium Priority
-5. Markdown editor upgrade - Integrate TinyMCE or Markdown editor in Django Admin
-6. Add article scheduling - Celery task for auto-publishing
-7. E2E tests with Playwright - Critical user journeys
-Low Priority (Nice to have)
-8. CDN for static assets - Cloudflare integration
-9. Error tracking - Sentry integration
-10. Monitoring - Prometheus/Grafana for metrics
----
-✅ FINAL VERDICT
-Overall Alignment: 93%
-Category	Score	Notes
-Architecture	100%	BFF, Centralized Registry, async params - all perfect
-Backend Models	98%	Complete, well-tested, GST compliant
-API Design	95%	Follows RESTful patterns, proper auth
-Frontend Components	90%	Missing some advanced filtering
-Test Coverage	95%	93 backend + 39 frontend tests passing
-Singapore Compliance	100%	GST, PDPA, address format - all correct
-Code Quality	95%	Clean, well-documented, type-safe
-Production Readiness: YES (with minor gaps)
-The codebase is production-ready with the following caveats:
-- Add price filtering before launch
-- Implement quiz results chart
-- Verify all Phase 6 markdown plugins installed
-Architecture Compliance: EXCELLENT
-The implementation follows the planned architecture with:
-- ✅ BFF pattern with HttpOnly cookies
-- ✅ Centralized API Registry (no circular imports)
-- ✅ Next.js 15+ async params
-- ✅ React 19 (no forwardRef)
-- ✅ Tailwind v4 CSS-first
-- ✅ TDD methodology (RED-GREEN-REFACTOR)
----
-Code review completed by Frontend Architect & Technical Partner
-Date: 2026-04-20
-Project Phase: 8 (Testing & Deployment)
-The CHA YUAN codebase demonstrates exceptional engineering quality with meticulous attention to Singapore compliance, modern architecture patterns, and comprehensive test coverage.
-# CHA YUAN (茶源) - Project Knowledge Base
-
-**Premium Tea E-Commerce Platform for Singapore**  
-*The ultimate source-of-truth for project initialization, architecture, and engineering standards.*
-
----
-
-## 🍵 Project Identity & Context
-
-**CHA YUAN (茶源)** is a premium tea e-commerce platform exclusively designed for the Singapore market. It bridges Eastern tea heritage with modern lifestyle commerce through a subscription model powered by a preference-based curation algorithm.
-
-### Core Problems Solved
-- **Guided Selection**: Users navigate tea varieties via an onboarding preference quiz.
-- **Personalized Curation**: Monthly tea boxes curated based on taste preferences and current season.
-- **Singapore Localization**: Native support for 9% GST, SGD pricing, local address formats, and PDPA compliance.
-
----
-
-## 🏗️ Technical Architecture
-
-### Tech Stack (2026 Standards)
-| Layer | Technology | Version | Key Features |
-|-------|-----------|---------|--------------|
-| **Frontend** | Next.js | 16.2+ | App Router, Server Components, Async Params |
-| **Framework** | React | 19+ | Server Actions, Concurrent features, No `forwardRef` |
-| **Backend** | Django | 6.0+ | Python 3.12+, Async support |
-| **API** | Django Ninja | 1.6+ | Pydantic v2, Centralized Registry pattern |
-| **Database** | PostgreSQL | 17 | JSONB optimization, vacuum efficiency |
-| **Cache** | Redis | 7.4 | Cart persistence (30 days), Sessions, Rate limiting |
-| **Styling** | Tailwind CSS | v4 | CSS-first, OKLCH colors, NO `tailwind.config.js` |
-| **Payment** | Stripe | 14.4+ | Singapore integration (GrabPay, PayNow) |
-
-### High-Level Architecture Patterns
-1. **BFF (Backend for Frontend)**: 
-   - Frontend uses a proxy route (`/api/proxy/[...path]/route.ts`) to communicate with the backend.
-   - Secure JWT handling via HttpOnly cookies (never stored in `localStorage`).
-2. **Centralized API Registry**:
-   - Backend uses `api_registry.py` for eager router registration at import time.
-   - Prevents circular imports and ensures endpoints are registered before the URL resolver runs.
-3. **Server-First Design**:
-   - Heavy use of React Server Components (RSC) for SEO and initial page loads.
-   - Client components used only for interactive elements (Cart, Quiz, Filters).
-
----
-
-## 📂 File Hierarchy & Critical Files
-
-### Core Structure
-```
-cha-yuan/
-├── backend/
-│   ├── api_registry.py          # CRITICAL: Centralized API entrypoint
-│   ├── apps/
-│   │   ├── api/v1/              # Django Ninja Routers
-│   │   ├── commerce/            # Products, Cart, Curation, Subscriptions
-│   │   ├── content/             # Quiz, Articles, User Preferences
-│   │   └── core/                # Users, Auth, Singapore Utilities
-│   └── chayuan/settings/        # Environment-specific settings
-├── frontend/
-│   ├── app/                     # Next.js App Router
-│   │   ├── (routes)/            # Logic-grouped routes
-│   │   ├── api/proxy/           # BFF Proxy Route
-│   │   └── globals.css          # Tailwind v4 Configuration
-│   ├── components/              # UI Components (shadcn + bespoke)
-│   ├── lib/                     # API wrappers, Hooks, Types
-│   └── public/                  # Assets
-└── infra/docker/                # PostgreSQL 17 + Redis 7.4 containers
-```
-
-### Critical File Reference
-- `backend/api_registry.py`: Where all API routers are registered.
-- `backend/apps/commerce/curation.py`: The heart of the recommendation engine.
-- `frontend/lib/auth-fetch.ts`: The unified fetcher that handles BFF proxying and JWT.
-- `frontend/app/globals.css`: Contains the entire Tailwind v4 theme configuration.
-
----
-
-## 🇸🇬 Singapore Context & Compliance
-
-### Financial & Regulatory
-- **GST 9%**: Hardcoded as `Decimal('0.09')`. All public prices are displayed inclusive of GST.
-- **Currency**: SGD is the only supported currency.
-- **PDPA**: User model includes `pdpa_consent_at` for tracking compliance.
-
-### Formats
-- **Address**: `Block/Street`, `Unit`, `Postal Code` (6-digit validation).
-- **Phone**: `+65 XXXX XXXX` validation.
-- **Timezone**: All operations use `Asia/Singapore`.
-
----
-
-## 🍵 Core Business Logic
-
-### Curation Algorithm (60/30/10)
-Located in `backend/apps/commerce/curation.py`, it scores products for subscription boxes:
-1. **User Preferences (60%)**: Based on one-time onboarding quiz scores (0-100 per category).
-2. **Seasonality (30%)**: Matches tea harvest cycles (Spring: Mar-May, Summer: Jun-Aug, etc.).
-3. **Inventory (10%)**: Boosts products with healthy stock levels to ensure fulfillment.
-
-### Shopping Cart
-- **Persistent**: Stored in Redis with a 30-day TTL.
-- **Anonymous to Auth**: Merges local cart with user cart upon login.
-
----
-
-## 🛠️ Engineering Standards
-
-### Backend (Django Ninja)
-- **Endpoint Pattern**: Use relative paths in routers (e.g., `@router.get("/")`). The prefix is added in `api_registry.py`.
-- **Trailing Slashes**: Mandatory for all Django Ninja endpoints (e.g., `/api/v1/products/`).
-
-### Frontend (Next.js 16 + React 19)
-- **Async Params**: Page `params` and `searchParams` are **Promises**. Must `await params` before accessing properties.
-- **No `forwardRef`**: React 19 treats `ref` as a standard prop. Do not use `forwardRef`.
-- **Tailwind v4**: Do NOT create a `tailwind.config.js`. Use `@theme` blocks in `globals.css`.
-- **Zod 4**: Used for all runtime validation and form schemas.
-
-### Testing Workflow (TDD)
-- **Backend**: `pytest` with `pytest-django`. Target 85% coverage.
-- **Frontend**: `Vitest` for unit/component tests, `Playwright` for E2E.
-- **Requirement**: A change is not "Done" until behavioral correctness is verified with tests.
-
----
-
-## 🚀 Common Workflows
-
-### Starting Development
-```bash
-# Infrastructure
-cd infra/docker && docker-compose up -d
-
-# Backend
-cd backend && source .venv/bin/activate
-python manage.py runserver 127.0.0.1:8000 --settings=chayuan.settings.development
-
-# Frontend
-cd frontend && npm run dev
-```
-
-### Seeding Data
-```bash
-python manage.py seed_products  # Seeds 12 teas, categories, and origins
-python manage.py seed_quiz      # Seeds 6 onboarding questions
-```
-
----
-
-## ⚠️ Anti-Patterns to Avoid
-1. **Never** store JWT in `localStorage`. Use the BFF proxy + HttpOnly cookies.
-2. **Never** use `any`. Use `unknown` or specific interfaces.
-3. **Never** build a custom component if a `shadcn/ui` primitive exists. Wrap it instead.
-4. **Never** forget trailing slashes on API calls from the frontend.
-
----
-
-*Last Updated: 2026-04-20 | Project Phase: 8 (Testing & Deployment)*

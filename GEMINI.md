@@ -3,7 +3,8 @@
 **Role**: Senior Frontend Architect & Technical Partner
 **Project**: CHA YUAN (Premium Tea E-Commerce for Singapore)
 **Phase**: 8 (Testing & Deployment)
-**Last Updated**: 2026-04-20
+**Last Updated**: 2026-04-21
+**Version**: 1.2.0
 
 ---
 
@@ -23,9 +24,10 @@ CHA YUAN is a premium tea e-commerce platform built exclusively for the Singapor
 
 ### Project Status
 
-- **Total Tests**: 93+ backend (pytest) + 39 frontend (Vitest) tests passing
+- **Total Tests**: 93+ backend (pytest) + 43+ tests total (including new Cart persistence tests) passing
 - **TypeScript**: Strict mode, 0 errors
-- **Phase**: 8 - Production-ready pending final E2E tests
+- **Cart API**: Fixed 401 errors for anonymous users; implemented `Set-Cookie` persistence for guest carts
+- **Phase**: 8 - Production-ready pending final E2E verification
 
 ---
 
@@ -33,7 +35,8 @@ CHA YUAN is a premium tea e-commerce platform built exclusively for the Singapor
 
 - **Currency**: SGD (Hardcoded default, formatter: `Intl.NumberFormat('en-SG', { style: 'currency', currency: 'SGD' })`)
 - **Taxation**: 9% GST calculated on all prices (displayed as inclusive, `GST_RATE = Decimal('0.09')`)
-- **Timezone**: `Asia/Singapore` (SGT) - used for seasonal curation
+- **Pricing**: Calculations follow IRAS guidelines using `ROUND_HALF_UP` rounding
+- **Timezone**: `Asia/Singapore` (SGT) - used for seasonal curation and billing
 - **Compliance**: PDPA consent tracking is mandatory (`User.pdpa_consent_at`)
 - **Logistics**: Singapore-specific address validation (Block/Street, Unit, 6-digit Postal Code)
 - **Phone**: `+65 XXXX XXXX` validation (`^\+65\s?\d{8}$`)
@@ -79,7 +82,7 @@ npm run dev  # Uses Turbopack (--turbopack flag in package.json)
 
 ### Testing
 
-- **Backend**: `pytest` (Target: 85%+ coverage, current: 93+ tests passing)
+- **Backend**: `pytest` (Target: 85%+ coverage, current: 97+ tests passing)
 - **Frontend Unit**: `npm test` (Vitest, 39 tests passing)
 - **Frontend E2E**: `npm run test:e2e` (Playwright)
 - **TypeScript**: `npm run typecheck` (Strict mode, 0 errors)
@@ -104,8 +107,9 @@ npm run dev  # Uses Turbopack (--turbopack flag in package.json)
    ```
 3. **Tailwind v4**: CSS-first configuration. Do NOT use `tailwind.config.js`. Configure `@theme` in `globals.css`.
 4. **Django Ninja**: Use the Centralized API Registry pattern. Register routers in `api_registry.py` at import time. Router endpoints use RELATIVE paths (`@router.get("/")`, NOT `@router.get("/products/")`).
-5. **TypeScript**: Strict mode is enforced. No `any` — use `unknown` or specific interfaces. Prefer `interface` over `type` (except unions).
-6. **Trailing Slashes**: Mandatory on all API calls to Django Ninja endpoints.
+5. **Auth Success Truthiness**: Django Ninja auth callables must return a truthy value (e.g., `AnonymousUser()`) even for optional auth to succeed. Returning `None` triggers a 401.
+6. **TypeScript**: Strict mode is enforced. No `any` — use `unknown` or specific interfaces. Prefer `interface` over `type` (except unions).
+7. **Trailing Slashes**: Mandatory on all API calls to Django Ninja endpoints.
 
 ### State Management & Data Fetching
 
@@ -116,7 +120,7 @@ npm run dev  # Uses Turbopack (--turbopack flag in package.json)
   - Client-side: BFF proxy routing through `/api/proxy/`
   - JWT injection from HttpOnly cookies
   - Token refresh on 401
-- **Cart Persistence**: Redis-backed with 30-day TTL. Anonymous cart merges on login.
+- **Cart Persistence**: Redis-backed with 30-day TTL. Anonymous cart merges on login. Cookies must be forwarded via BFF Proxy.
 
 ### API Patterns
 
@@ -145,6 +149,30 @@ const response = await authFetch("/api/v1/cart/add/", {
   - Chinese: "Noto Serif SC", serif (茶源 branding)
 - **UX**: Focus on micro-interactions via Framer Motion 12.38.0+ and intentional minimalism
 - **Animations**: CSS custom properties in `globals.css` (`fadeInUp`, `leafFloat`, `steamRise`)
+
+---
+
+## 💡 Lessons Learned & Troubleshooting
+
+### 1. Django Ninja Auth Truthiness (CRITICAL)
+**Lesson**: Django Ninja interprets `None` from an auth callable as "Authentication Failed" (401), even if `auth=JWTAuth(required=False)`.
+**Solution**: Auth callables must return `AnonymousUser()` instead of `None` for optional authentication to work correctly.
+
+### 2. Cart Cookie Persistence
+**Lesson**: Anonymous carts were being reset because `cart_id` was generated but not returned to the client in the response headers.
+**Solution**: Use the `create_cart_response(response, cart_id, is_new)` helper in `backend/apps/api/v1/cart.py` to ensure `Set-Cookie` is sent for new sessions.
+
+### 3. Hydration-Safe Animated Links
+**Lesson**: Wrapping Next.js `<Link>` components with `<motion.div>` often causes SSR/CSR mismatches.
+**Solution**: Use `motion.create(Link)` to create a hydration-safe animated link component that merges props correctly.
+
+### 4. Next.js 15+ Async Params
+**Lesson**: Accessing `params.slug` directly in server components now throws errors or returns undefined.
+**Solution**: Always `await params` before accessing properties.
+
+### 5. BFF Proxy Cookie Forwarding
+**Lesson**: The Next.js BFF proxy at `frontend/app/api/proxy/[...path]/route.ts` may strip `set-cookie` headers by default.
+**Solution**: Ensure the proxy is configured to allow `set-cookie` and `content-encoding` through if guest cart persistence is required.
 
 ---
 
@@ -192,50 +220,14 @@ def get_current_season_sg() -> str:
 | Purpose | File | Description |
 |---------|------|-------------|
 | API Router | `backend/api_registry.py` | Central router registration (eager import) |
+| Auth Logic | `backend/apps/core/authentication.py` | JWT cookie handling & AnonymousUser logic |
+| Cart API | `backend/apps/api/v1/cart.py` | Cookie-aware cart endpoints |
 | Curation | `backend/apps/commerce/curation.py` | 60/30/10 scoring algorithm |
-| Cart | `backend/apps/commerce/cart.py` | Redis cart service (418 lines) |
+| Cart Svc | `backend/apps/commerce/cart.py` | Redis cart service (418 lines) |
 | Stripe SG | `backend/apps/commerce/stripe_sg.py` | Singapore Stripe integration |
 | Theme | `frontend/app/globals.css` | Tailwind v4 theme (349 lines) |
 | API Fetcher | `frontend/lib/auth-fetch.ts` | BFF wrapper (148 lines) |
 | Animations | `frontend/lib/animations.ts` | Framer Motion variants |
-| Product API | `frontend/lib/api/products.ts` | Product API functions |
-
-### Directory Structure
-
-```
-backend/
-├── api_registry.py          # Central API registration
-├── apps/
-│   ├── api/v1/             # API endpoints
-│   │   ├── products.py
-│   │   ├── cart.py
-│   │   ├── checkout.py
-│   │   ├── content.py
-│   │   ├── quiz.py
-│   │   └── subscriptions.py
-│   ├── commerce/           # Product, Order, Subscription
-│   ├── content/            # Quiz, Articles
-│   └── core/               # Users, Auth, SG utilities
-│       └── sg/
-│           ├── validators.py
-│           └── pricing.py
-
-frontend/
-├── app/
-│   ├── api/proxy/[...path]/  # BFF Proxy Route
-│   ├── products/
-│   ├── culture/
-│   ├── quiz/
-│   ├── checkout/
-│   └── dashboard/subscription/
-├── components/
-│   ├── ui/                  # shadcn primitives
-│   └── sections/            # Page sections
-├── lib/
-│   ├── api/                 # API functions
-│   ├── types/               # TypeScript interfaces
-│   └── hooks/               # Custom hooks
-```
 
 ---
 
@@ -249,6 +241,7 @@ frontend/
 6. **Never** create `tailwind.config.js`. Use CSS-first configuration in `globals.css`.
 7. **Never** register routers in `AppConfig.ready()`. Use eager registration in `api_registry.py`.
 8. **Never** use absolute paths in Django Ninja router endpoints. Use relative paths.
+9. **Never** return `None` for optional authentication in Django Ninja.
 
 ---
 
@@ -279,13 +272,14 @@ npm run test:e2e
 
 ## 📚 Documentation References
 
+- `PROJECT_MASTER_BRIEF.md` - Definitive project source-of-truth
+- `ACCOMPLISHMENTS.md` - Milestone tracking & detailed fix records
 - `README.md` - Comprehensive project overview
-- `CLAUDE.md` - Concise agent briefing (485 lines)
+- `CLAUDE.md` - Concise agent briefing (724 lines)
 - `AGENTS.md` - Project-specific context
 - `PROJECT_KNOWLEDGE_BASE.md` - Technical knowledge base
 - `docs/Project_Architecture_Document.md` - Full architecture (1,252 lines)
-- `docs/PHASE_7_SUBPLAN.md` - Quiz & Subscription implementation
 
 ---
 
-*Generated by Gemini CLI. Last updated: 2026-04-20*
+*Generated by Gemini CLI. Last updated: 2026-04-21*

@@ -23,6 +23,10 @@ awesome meticulous job on your review, analysis and planning. please keep up the
 
 ---
 
+Please meticulously and criticlly review the following project documents against the current codebase and to have a deep understanding of the WHAT, WHY and HOW of the project and its codebase design and architecture. Then meticulously plan to create markdown file with an appropriate name to comprehensively save/document down your deep validated understanding of the project and its codebase. The comprehensive analysis/understanding document should be able to comrehensive initialize any new coding agent with the same deep validated understanding of the project and its codebase without having to do another round of deep code review.   @README.md , @status.md and @docs/MASTER_EXECUTION_PLAN.md 
+
+---
+
 Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously review and update @README.md , @AGENT_BRIEF.md , @CLAUDE.md , @docs/Project_Architecture_Document.md and @ACCOMPLISHMENTS.md with your major milestone achievements, include things like code changes (updates and additions), enhancements and fixes, lessons learned, troubleshooting guide, any blockers encountered (solved or still persist), any recommended next steps, etc.
 
 # Update the project documents with:
