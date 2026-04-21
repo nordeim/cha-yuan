@@ -301,7 +301,7 @@ flowchart TB
 | **2** | JWT Authentication + BFF | ✅ Complete | HttpOnly cookies, proxy route |
 | **3** | Design System | ✅ Complete | Tailwind v4, shadcn, animations |
 | **4** | Product Catalog | ✅ Complete | Listing + Detail with filters |
-| **5** | Cart & Checkout | ✅ Complete | Redis cart, Stripe SG |
+| **5** | Cart & Checkout | ✅ Complete | Redis cart, cookie persistence, Stripe SG |
 | **6** | Tea Culture Content | ✅ Complete | Articles, markdown rendering |
 | **7** | Quiz & Subscription | ✅ Complete | Curation algorithm, dashboard |
 | **8** | Testing & Deployment | 🚧 In Progress | 93 backend + 39 frontend tests passing |
