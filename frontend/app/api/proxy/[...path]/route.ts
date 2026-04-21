@@ -74,6 +74,13 @@ export async function ALL(
     }
   });
 
+  // Forward Cookie header for cart persistence (cart_id)
+  // This allows the backend to maintain cart state across requests
+  const cookieHeader = clientHeaders.get("cookie");
+  if (cookieHeader) {
+    headers["Cookie"] = cookieHeader;
+  }
+
   try {
     // Build fetch options
     const fetchOptions: RequestInit = {
@@ -186,7 +193,7 @@ async function retryRequest(
   // Await params (Next.js 15+ requirement)
   const { path } = await context.params;
   const pathString = path.join("/");
-  const targetUrl = new URL(`/api/v1/${pathString}`, BACKEND_URL);
+  const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL);
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
@@ -196,6 +203,12 @@ async function retryRequest(
 
   if (newToken) {
     headers["Authorization"] = `Bearer ${newToken}`;
+  }
+
+  // Forward Cookie header for cart persistence
+  const cookieHeader = request.headers.get("cookie");
+  if (cookieHeader) {
+    headers["Cookie"] = cookieHeader;
   }
 
   const fetchOptions: RequestInit = {
@@ -213,14 +226,27 @@ async function retryRequest(
   const response = await fetch(targetUrl.toString(), fetchOptions);
   const responseBody = await response.text();
 
-  return new NextResponse(responseBody, {
+  const nextResponse = new NextResponse(responseBody, {
     status: response.status,
     statusText: response.statusText,
-    headers: {
-      "Content-Type": "application/json",
-      "Cache-Control": "private, no-store",
-    },
   });
+
+  // Forward cart_id cookie from backend
+  response.headers.forEach((value, key) => {
+    const lowerKey = key.toLowerCase();
+    if (lowerKey === "set-cookie") {
+      const cookies = value.split(",");
+      cookies.forEach((cookie) => {
+        if (cookie.trim().startsWith("cart_id=")) {
+          nextResponse.headers.append("set-cookie", cookie.trim());
+        }
+      });
+    }
+  });
+
+  nextResponse.headers.set("Cache-Control", "private, no-store");
+
+  return nextResponse;
 }
 
 // Export individual methods that delegate to ALL handler

@@ -80,6 +80,10 @@ Subscribe`, then turn the current 'Shop' icon into a (shopping) 'Cart' icon whic
 
 ---
 
+awesome meticulous job so far. please keep up the good work. now, I detect a bug: when I click on top 'Cart' icon, it displays a page claiming that my shopping cart is empty even though I had repeatedly adding items to the cart via the 'Add to Cart' button. Please meticulously review the frontend and backend server logs @nextjs.log and @django.log for more clues. Please meticulously review the codebase to identify the root cause for the 'empty shopping cart page' bug. Then meticulously plan to create a detailed remediation plan with a ToDo list to apply the validated optimal fix. review and validate your remediation plan against the codebase again to ensure correct alignment before proceeding to execute it meticulously. remember to use the Test-Driven Development (TDD) approach to make the changes.
+
+---
+
 when I ask you to update with validated changes, do not delete any existing file content that are not related and are still valid after review.
 
 Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously plan to systematically review and update @GEMINI.md to make it more useful and informative as well as more accurately aligned with the current codebase with the recent changes, include key troubleshooting tips and lessons learnt.
