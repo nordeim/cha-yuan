@@ -21,6 +21,22 @@
 
 ---
 
+## 📊 Project Status
+
+**Current Phase**: 8 (Testing & Deployment) - Production-Ready with Conditions  
+**Last Updated**: 2026-04-22  
+**Audit Report**: [CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md](CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md)
+
+| Metric | Status |
+|--------|--------|
+| Core Functionality | ✅ Complete |
+| Test Coverage | ⚠️ 30.76% (target: 50%) |
+| TypeScript | ✅ 0 errors (strict mode) |
+| Security | ⚠️ Headers need configuration |
+| Singapore Compliance | ✅ GST, PDPA complete |
+
+---
+
 ## 🍵 Overview
 
 **CHA YUAN (茶源)** is a premium tea e-commerce platform exclusively designed for the Singapore market. We bridge Eastern tea heritage with modern lifestyle commerce, offering a curated selection of premium teas from heritage gardens across China, Taiwan, Japan, and India.
@@ -304,7 +320,8 @@ flowchart TB
 | **5** | Cart & Checkout | ✅ Complete | Redis cart, cookie persistence, Stripe SG |
 | **6** | Tea Culture Content | ✅ Complete | Articles, markdown rendering |
 | **7** | Quiz & Subscription | ✅ Complete | Curation algorithm, dashboard |
-| **8** | Testing & Deployment | ✅ Complete | 346 backend + 78 frontend tests passing |
+| **8** | Testing & Deployment | 🚧 In Progress | 165 backend + 78 frontend tests passing, coverage 30.76% |
+| **Audit** | [Code Review Report](CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md) | ⚠️ Approved with Conditions | Security headers needed, test coverage to improve, core functionality verified |
 
 ### Core Features
 
@@ -419,9 +436,11 @@ npm run test:e2e:ui      # Playwright with UI
 
 ### Test Coverage
 
-- **Backend**: 346+ tests passing (pytest)
+- **Backend**: 165 tests passing, 114 failing, 62 errors (341 total, 30.76% coverage)
 - **Frontend Unit**: 78 tests passing (Vitest, 9 test files)
 - **E2E**: Critical user journeys (Playwright)
+- **Coverage Target**: 50% minimum (currently 30.76%)
+- **Coverage Gap**: Add tests for cart.py, stripe_sg.py, authentication.py (currently 0%)
 
 ---
 

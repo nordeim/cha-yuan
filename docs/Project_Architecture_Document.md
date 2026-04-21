@@ -1,7 +1,8 @@
 # CHA YUAN (茶源) - Project Architecture Document (PAD)
 
 **Premium Tea E-Commerce Platform for Singapore**
-**Version**: 2.0.0 | **Last Updated**: 2026-04-21 | **Status**: PRODUCTION-READY
+**Version**: 2.0.1 | **Last Updated**: 2026-04-22 | **Status**: PRODUCTION-READY with Conditions
+**Audit Report**: [CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md](../CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md)
 
 ---
 
@@ -53,8 +54,9 @@
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| **Backend Tests** | ✅ 346 passing | pytest with cart cookie tests |
-| **Frontend Tests** | ✅ 78 passing | Vitest + Playwright |
+| **Backend Tests** | ⚠️ 165 passing | 341 total (165 passed, 114 failed, 62 errors) |
+| **Test Coverage** | ⚠️ 30.76% | Below 50% threshold - needs improvement |
+| **Frontend Tests** | ✅ 78 passing | Vitest + Playwright (9 test files) |
 | **TypeScript** | ✅ Strict mode | 0 errors |
 | **Add to Cart** | ✅ Fixed | Product detail page cart button working |
 | **Navigation** | ✅ Complete | Cart icon, Shop link, absolute paths |
@@ -62,8 +64,10 @@
 | **Cart API** | ✅ Fixed | 401 errors resolved, cookie persistence working |
 | **BFF Proxy** | ✅ Fixed | Trailing slash handling for POST/PUT/DELETE |
 | **Authentication** | ✅ Complete | JWT + HttpOnly cookies, AnonymousUser pattern |
-| **Add to Cart** | ✅ Fixed | Product detail page cart button working |
-| **Phase** | ✅ 8 Complete | Production-ready |
+| **Security Headers** | ⚠️ Missing | Django production security headers needed |
+| **Phase** | 🚧 8 In Progress | Core complete, test stabilization needed |
+
+**Audit Summary:** See [CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md](../CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md) for detailed findings.
 
 ---
 
@@ -134,7 +138,7 @@ flowchart TB
 
 ## 3. Project Status & Milestones
 
-**Last Updated:** 2026-04-21 | **Status:** PRODUCTION-READY | **Test Count:** 346 backend + 39 frontend tests passing
+**Last Updated:** 2026-04-22 | **Status:** PRODUCTION-READY with Conditions | **Test Count:** 165 backend + 78 frontend tests passing
 
 ### Phase Completion Status
 
@@ -148,7 +152,8 @@ flowchart TB
 | **5** | Cart & Checkout | ✅ Complete | Redis cart, cookie persistence, Stripe SG |
 | **6** | Tea Culture | ✅ Complete | Articles, brewing guides |
 | **7** | Quiz & Subscription | ✅ Complete | Curation algorithm, dashboard |
-| **8** | Testing & Deployment | ✅ Complete | 97+ backend + 39 frontend tests |
+| **8** | Testing & Deployment | 🚧 In Progress | 165 backend + 78 frontend tests passing, 30.76% coverage |
+| **Audit** | [Code Review Report](../CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md) | ⚠️ Approved with Conditions | Security headers needed, test coverage to improve |
 
 ### Major Milestones Completed
 
@@ -1982,8 +1987,9 @@ npm run test:e2e
 *Last updated: 2026-04-21 | Phase: 8 (Testing & Deployment)*
 *Version: 2.1.0 | Status: PRODUCTION-READY*
 *Total Lines: ~1,900*
-*Test Status: 346 backend + 39 frontend tests passing*
+*Test Status: 165 backend + 78 frontend tests passing | Coverage: 30.76%*
 **Major Milestones Completed:**
 - ✅ Milestone 1: Cart API Authentication Fix (AnonymousUser pattern)
 - ✅ Milestone 2: Cart Cookie Persistence Fix (Tuple return + create_cart_response)
 - ✅ Milestone 3: BFF Proxy Trailing Slash Fix (route.ts)
+- 📊 Code Audit Complete: See [CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md](../CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md)
