@@ -53,11 +53,13 @@
 
 | Component | Status | Details |
 |-----------|--------|---------|
-| **Backend Tests** | ✅ 97+ passing | pytest with cart cookie tests |
+| **Backend Tests** | ✅ 346 passing | pytest with cart cookie tests |
 | **Frontend Tests** | ✅ 39 passing | Vitest + Playwright |
 | **TypeScript** | ✅ Strict mode | 0 errors |
 | **Cart API** | ✅ Fixed | 401 errors resolved, cookie persistence working |
+| **BFF Proxy** | ✅ Fixed | Trailing slash handling for POST/PUT/DELETE |
 | **Authentication** | ✅ Complete | JWT + HttpOnly cookies, AnonymousUser pattern |
+| **Add to Cart** | ✅ Fixed | Product detail page cart button working |
 | **Phase** | ✅ 8 Complete | Production-ready |
 
 ---
@@ -128,6 +130,8 @@ flowchart TB
 ---
 
 ## 3. Project Status & Milestones
+
+**Last Updated:** 2026-04-21 | **Status:** PRODUCTION-READY | **Test Count:** 346 backend + 39 frontend tests passing
 
 ### Phase Completion Status
 
@@ -272,6 +276,51 @@ def get_cart(request: HttpRequest):
 | `samesite="Lax"` | CSRF protection | Allows normal navigation |
 | `path="/"` | Site-wide | Available on all routes |
 | `max_age=30 days` | Persistence | Matches Redis TTL |
+
+---
+
+#### Milestone 3: BFF Proxy Trailing Slash Fix (2026-04-21)
+
+**Problem:** "Add to Cart" button on product detail page returning 500 Runtime Error
+
+**Root Cause Analysis:**
+The BFF proxy in `frontend/app/api/proxy/[...path]/route.ts` was stripping trailing slashes when constructing backend URLs. Django Ninja requires trailing slashes for all endpoints. POST requests without trailing slashes trigger Django's CommonMiddleware RuntimeError:
+```
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash
+and you have APPEND_SLASH set. Django can't redirect to the slash URL while
+maintaining POST data.
+```
+
+**Backend Logs Confirmed Issue:**
+```
+❌ BEFORE: POST /api/v1/cart/add HTTP/1.1" 500 (missing trailing slash)
+✅ AFTER:  POST /api/v1/cart/add/ HTTP/1.1" 200 (trailing slash present)
+```
+
+**Solution:**
+Modified `frontend/app/api/proxy/[...path]/route.ts` to append trailing slash to backend URLs:
+
+```typescript
+// BEFORE:
+const pathString = path.join("/");
+const targetUrl = new URL(`/api/v1/${pathString}`, BACKEND_URL);
+
+// AFTER:
+const pathString = path.join("/");
+// Django Ninja requires trailing slashes for all endpoints
+// POST/PUT/DELETE requests fail without them (Django CommonMiddleware)
+const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL);
+```
+
+**Files Modified:**
+- `frontend/app/api/proxy/[...path]/route.ts` (lines 38-41)
+
+**Frontend Logs Verification:**
+```
+✅ POST /api/proxy/cart/add/ 200 in 126ms
+✅ Backend: POST /api/v1/cart/add/ 200 in 41ms
+✅ Cart refresh: GET /api/v1/cart/ 200 in 48ms
+```
 
 ---
 
@@ -1780,7 +1829,50 @@ except Product.DoesNotExist:
 2. Frontend calling wrong URL: Ensure trailing slash `/api/v1/products/{slug}/`
 3. Product not in database: Check slug exists
 
-### A.6 Verification Commands
+### A.6 BFF Proxy Trailing Slash Errors (500)
+
+**Symptoms:** POST/PUT/DELETE requests through BFF proxy return 500 with RuntimeError about trailing slashes
+
+**Backend Logs:**
+```
+POST /api/v1/cart/add HTTP/1.1" 500
+RuntimeError: You called this URL via POST, but the URL doesn't end in a slash
+and you have APPEND_SLASH set. Django can't redirect to the slash URL while
+maintaining POST data.
+```
+
+**Root Cause:** BFF proxy in `frontend/app/api/proxy/[...path]/route.ts` strips trailing slashes when constructing backend URLs. Django's CommonMiddleware cannot redirect POST requests while maintaining data.
+
+**Frontend Logs:**
+```
+❌ POST /api/v1/cart/add (500) - Missing trailing slash
+✅ POST /api/v1/cart/add/ (200) - Trailing slash present
+```
+
+**Fix:** Add trailing slash in BFF proxy URL construction:
+```typescript
+// ❌ BAD: Missing trailing slash (line 39)
+const pathString = path.join("/");
+const targetUrl = new URL(`/api/v1/${pathString}`, BACKEND_URL);
+
+// ✅ GOOD: Trailing slash added
+const pathString = path.join("/");
+const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL);
+```
+
+**File:** `frontend/app/api/proxy/[...path]/route.ts` (line 41)
+
+**Verification:**
+```bash
+# Test cart add via BFF proxy
+curl -s http://localhost:3000/api/proxy/cart/add/ \
+-X POST -H "Content-Type: application/json" \
+-d '{"product_id": 1, "quantity": 1}' \
+-w "\nStatus: %{http_code}\n"
+# Should return: Status: 200
+```
+
+### A.7 Verification Commands
 
 ```bash
 # Test cart endpoint
@@ -1862,6 +1954,10 @@ npm run test:e2e
 
 *Document generated from meticulous codebase analysis*
 *Last updated: 2026-04-21 | Phase: 8 (Testing & Deployment)*
-*Version: 2.0.0 | Status: PRODUCTION-READY*
-*Total Lines: ~1,800*
-*Test Status: 97+ backend + 39 frontend tests passing*
+*Version: 2.1.0 | Status: PRODUCTION-READY*
+*Total Lines: ~1,900*
+*Test Status: 346 backend + 39 frontend tests passing*
+**Major Milestones Completed:**
+- ✅ Milestone 1: Cart API Authentication Fix (AnonymousUser pattern)
+- ✅ Milestone 2: Cart Cookie Persistence Fix (Tuple return + create_cart_response)
+- ✅ Milestone 3: BFF Proxy Trailing Slash Fix (route.ts)

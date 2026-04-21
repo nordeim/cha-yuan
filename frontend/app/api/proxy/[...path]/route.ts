@@ -36,7 +36,9 @@ export async function ALL(
   }
 
   const pathString = path.join("/");
-  const targetUrl = new URL(`/api/v1/${pathString}`, BACKEND_URL);
+  // Django Ninja requires trailing slashes for all endpoints
+  // POST/PUT/DELETE requests fail without them (Django CommonMiddleware)
+  const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL);
 
   // Copy query parameters from incoming request
   const searchParams = request.nextUrl.searchParams;
