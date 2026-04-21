@@ -84,6 +84,10 @@ awesome meticulous job so far. please keep up the good work. now, I detect a bug
 
 ---
 
+awesome meticulous job so far. please keep up the good work. now, I detect a minor usability bug: when I am in the `http://localhost:3000/products/` and individual product pages like `http://localhost:3000/products/aged-puerh-2018/`, the top navigation bar is not showing (missing) so I can't go back or click on the 'Cart' icon to checkout. Please meticulously review the codebase to identify the root cause for the 'disappearing top navigation bar' (hidden?) on the '/products' and the individual product pages. Then meticulously plan to create a detailed remediation plan with a ToDo list to apply the validated optimal fix. review and validate your remediation plan against the codebase again to ensure correct alignment before proceeding to execute it meticulously. remember to use the Test-Driven Development (TDD) approach to make the changes.
+
+---
+
 when I ask you to update with validated changes, do not delete any existing file content that are not related and are still valid after review.
 
 Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously plan to systematically review and update @GEMINI.md to make it more useful and informative as well as more accurately aligned with the current codebase with the recent changes, include key troubleshooting tips and lessons learnt.
