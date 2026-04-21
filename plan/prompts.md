@@ -23,7 +23,19 @@ awesome meticulous job on your review, analysis and planning. please keep up the
 
 ---
 
-Please meticulously and criticlly review the following project documents against the current codebase and to have a deep understanding of the WHAT, WHY and HOW of the project and its codebase design and architecture. Then meticulously plan to create markdown file with an appropriate name to comprehensively save/document down your deep validated understanding of the project and its codebase. The comprehensive analysis/understanding document should be able to comrehensive initialize any new coding agent with the same deep validated understanding of the project and its codebase without having to do another round of deep code review.   @README.md , @status.md and @docs/MASTER_EXECUTION_PLAN.md 
+Please meticulously and criticlly review the following project documents against the current codebase and to have a deep understanding of the WHAT, WHY and HOW of the project and its codebase design and architecture. Then meticulously plan to create markdown file with an appropriate name to comprehensively save/document down your deep validated understanding of the project and its codebase. The comprehensive analysis/understanding document should be able to comrehensive initialize any new coding agent with the same deep validated understanding of the project and its codebase without having to do another round of deep code review.   @README.md , @status.md , @status_12.md and @docs/MASTER_EXECUTION_PLAN.md 
+
+Create a comprehensive AGENT_INITIALIZATION_GUIDE.md document that captures your deep validated understanding of the CHA YUAN project, enabling any new coding agent to immediately understand the codebase without requiring another deep review
+
+---
+
+Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously plan to systematically review and update @docs/Project_Architecture_Document.md to make it more comprehensive as the 'PAD' well as make it more accurately aligned with the current codebase with the recent changes, include key troubleshooting tips and lessons learnt.
+
+---
+
+when I ask you to update with validated changes, do not delete any existing file content that are not related and are still valid after review.
+
+Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously plan to systematically review and update @GEMINI.md to make it more useful and informative as well as more accurately aligned with the current codebase with the recent changes, include key troubleshooting tips and lessons learnt.
 
 ---
 
