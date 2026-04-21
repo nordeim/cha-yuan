@@ -92,6 +92,26 @@ awesome meticulous job so far. please keep up the good work. when I click on 'Cr
 
 ---
 
+Please meticulously plan to do a systematic and careful code review and audit of the current codebase. then meticulously plan to create a comprehensive codebase review and assessment report as a markdown file with an appropriate filename. Next, meticulously review and validate @AGENT_BRIEF.md against the actual codebase to align it accurately with the current codebase.
+
+# Task:
+1. Meticulously plan a systematic and careful code review and audit of the current codebase
+2. Create a comprehensive codebase review and assessment report as a markdown file
+3. Review and validate AGENT_BRIEF.md against the actual codebase to align it accurately
+
+This is a complex multi-step task that requires:
+1. First, you need to understand the current state of the codebase by reading key files
+2. Then perform a systematic review and audit
+3. Create a comprehensive report
+4. Validate and align AGENT_BRIEF.md
+
+Then start by loading the appropriate skills and then exploring the codebase. Let us begin by loading the appropriate skills and systematically analyzing
+- Skill "code-review-and-audit"
+- Skill "analyzing-projects"
+- Skill "plan-writing"
+
+---
+
 when I ask you to update with validated changes, do not delete any existing file content that are not related and are still valid after review.
 
 Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously plan to systematically review and update @GEMINI.md to make it more useful and informative as well as more accurately aligned with the current codebase with the recent changes, include key troubleshooting tips and lessons learnt.
