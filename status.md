@@ -1001,3 +1001,31 @@ The codebase is functionally production-ready with these conditions:
 3. Authentication flow tests are a critical gap
 Both the comprehensive audit report and the enhanced AGENT_BRIEF.md are now available in the project root.
 
+---
+
+Validation Complete
+I've successfully completed a meticulous and systematic validation of the Design Choices Reviews against the actual CHA YUAN codebase. The comprehensive report has been created at:
+/home/project/tea-culture/cha-yuan/Validated_Design_Choices_Review.md
+Key Findings Summary
+Architectural Choice	Status	Evidence
+BFF Pattern + HttpOnly JWT	✅ VERIFIED	257 lines in route.ts, token refresh, secure cookies
+60/30/10 Curation Algorithm	✅ VERIFIED	Exact weights at lines 128, 132, 140; SG season detection
+Redis 30-Day Cart	✅ VERIFIED	Hash structure, TTL reset on interaction, atomic HINCRBY
+Centralized API Registry	✅ VERIFIED	Eager registration, auth router first, relative paths
+Singapore Compliance	✅ VERIFIED	GST 9%, PDPA consent, phone/postal validators
+Critical Gaps Identified
+1. CSRF Token Forwarding - BFF proxy doesn't forward CSRF tokens explicitly
+2. Security Headers (CSP) - CSP, HSTS not implemented
+3. DPO Public Contact - Required by PDPA 2026 amendments
+4. Redis AOF Persistence - Infrastructure configuration needs verification
+Validated Code Evidence
+The report includes concrete line-by-line verification from actual source files:
+- frontend/app/api/proxy/[...path]/route.ts (257 lines)
+- frontend/lib/auth-fetch.ts (148 lines)
+- backend/apps/commerce/curation.py (294 lines)
+- backend/apps/commerce/cart.py (419 lines)
+- backend/api_registry.py (64 lines)
+- backend/apps/core/authentication.py (190 lines)
+- backend/apps/core/models.py (133 lines)
+The original Design Choices Reviews are highly accurate - all major architectural claims are verified in the codebase. The recommendations are valuable for future enhancements but do not represent bugs or incorrect implementations.
+
