@@ -112,6 +112,10 @@ Then start by loading the appropriate skills and then exploring the codebase. Le
 
 ---
 
+Read and understand the complete directory structure, key files (CLAUDE.md, GEMINI.md, package.json, tsconfig.json), and the `frontend/` and `backend/` architecture to build comprehensive understanding of the packages and codebase. Read and document package.json structure, dependencies, scripts, and project configuration. Explore the `frontend/` and `backend/` directories to understand the codebase organization, key modules, and entry points. Cross-reference the written README against all key codebase files to ensure accuracy, completeness, and no misrepresentation.
+
+---
+
 when I ask you to update with validated changes, do not delete any existing file content that are not related and are still valid after review.
 
 Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously plan to systematically review and update @GEMINI.md to make it more useful and informative as well as more accurately aligned with the current codebase with the recent changes, include key troubleshooting tips and lessons learnt.
