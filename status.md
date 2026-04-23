@@ -936,3 +936,18 @@ Deployment Recommendation
 3. Stabilize test suite (fix 114 failures + 62 errors)
 The core architecture is sound and all functionality is verified working. The codebase is production-ready pending minor security hardening and test coverage improvements.
 
+---
+
+I have completed the update of GEMINI.md, ensuring that all project status metrics, architectural fixes, and critical lessons learned are accurately reflected and aligned with the latest findings from the Phase 8 Audit.
+
+Key Updates Summary:
+ - Project Status: Updated to reflect the 2026-04-22 Audit Report findings (165 passing, 114 failed, 62 errors).
+ - BFF Proxy Trailing Slashes: Documented the mandatory trailing slash requirement for all Django Ninja endpoints.
+ - Hydration Safety: Added motion.create(Link) as the standard for animated navigation to prevent SSR/CSR mismatches.
+ - Authentication: Refined the AnonymousUser() requirement for optional auth truthiness.
+ - New Page References: Included the Register page (password complexity and PDPA consent) and the Cart Cookie TDD tests in the file reference.
+ - Security: Added audit-recommended production security headers (SECURE_BROWSER_XSS_FILTER, etc.) to the troubleshooting guide.
+ - Anti-Patterns: Added a specific rule against invalid HTML nesting (Link inside motion.div).
+
+All surgical updates have been applied while strictly preserving the existing valid content.
+

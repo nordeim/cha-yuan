@@ -116,6 +116,20 @@ Read and understand the complete directory structure, key files (CLAUDE.md, GEMI
 
 ---
 
+Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously plan to systematically review and update @GEMINI.md to make it more useful and informative as well as more accurately aligned with the current codebase with the recent changes, include key troubleshooting tips and lessons learnt. when I ask you to update with validated changes, do not delete any existing file content that are not related and are still valid after review.
+
+ 1. Audit the Codebase vs. Current Docs: Compare the findings in the latest CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md and ACCOMPLISHMENTS.md with the existing GEMINI.md content.
+ 2. Verify Metrics: Confirm current test pass rates and coverage to ensure the "Project Status" section is precise.
+ 3. Identify Missing Patterns: Check if new patterns (like the Subscriptions API or specific BFF proxy cookie forwarding logic) are sufficiently documented.
+ 4. Draft Troubleshooting/Lessons: Consolidate recent technical hurdles (e.g., Next.js 16 hydration, Django Ninja auth truthiness) into actionable tips.
+
+---
+
+Please meticulously review and analyze the attached agent briefing document, then meticulously plan to compact/shrink it by removing duplicate information/data while re-organizing the content. take care not to remove any content that is not duplicated. also remove unnecessary headers and descriptions that do not have actual value to inform about the project. also remove all version information and their timestamps not giving real value. 
+Remove all duplicated content, redundant headers, and non-essential version/timestamp metadata while preserving all technical patterns, implementation guidance, compliance requirements, and troubleshooting information critical for development and maintenance.
+
+---
+
 when I ask you to update with validated changes, do not delete any existing file content that are not related and are still valid after review.
 
 Awesome job on your meticulous analysis, planning and execution. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously plan to systematically review and update @GEMINI.md to make it more useful and informative as well as more accurately aligned with the current codebase with the recent changes, include key troubleshooting tips and lessons learnt.

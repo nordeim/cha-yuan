@@ -3,8 +3,8 @@
 **Role**: Senior Frontend Architect & Technical Partner
 **Project**: CHA YUAN (Premium Tea E-Commerce for Singapore)
 **Phase**: 8 (Testing & Deployment) - PRODUCTION-READY with Conditions
-**Last Updated**: 2026-04-22
-**Version**: 1.4.0
+**Last Updated**: 2026-04-23
+**Version**: 1.5.0
 **Audit Report**: [CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md](../CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md)
 
 ---
@@ -33,7 +33,7 @@ CHA YUAN is a premium tea e-commerce platform built exclusively for the Singapor
 | **Cart API** | ✅ Fixed | 401 errors resolved, cookie persistence working |
 | **Authentication** | ✅ Complete | JWT + HttpOnly cookies, AnonymousUser pattern |
 | **Test Coverage** | ⚠️ 30.76% | Below 50% threshold - needs improvement |
-| **Phase** | 🚧 8 In Progress | Core functionality complete, test stabilization needed |
+| **Phase** | 🚧 8 In Progress | Core functionality complete, production-ready with conditions |
 
 ---
 
@@ -386,23 +386,21 @@ export default async function Page({ params }: PageProps) {
 
 ---
 
-### 5. BFF Proxy Cookie Forwarding
+### 5. BFF Proxy Cookie Forwarding & Trailing Slashes
 
-**Symptoms:** Cart persistence works in curl but not in browser; frontend requests don't include cookies
+**Symptoms:** Cart persistence works in curl but not in browser; POST/PUT/DELETE requests return 500 Runtime Errors
 
-**Root Cause:** The Next.js BFF proxy at `frontend/app/api/proxy/[...path]/route.ts` may strip `set-cookie` headers by default.
+**Root Cause:**
+1. The Next.js BFF proxy at `frontend/app/api/proxy/[...path]/route.ts` was stripping `set-cookie` headers and trailing slashes.
+2. Django Ninja requires trailing slashes for all endpoints. Django's `APPEND_SLASH=True` cannot safely redirect POST data.
 
-**Current Code (line ~112):**
-```typescript
-if (!["set-cookie", "content-encoding"].includes(key.toLowerCase())) {
-  response.headers.set(key, value);
-}
-// ❌ set-cookie header is being filtered out
-```
-
-**Solution:** Ensure the proxy forwards `set-cookie` headers specifically for cart endpoints.
+**Solution:** Ensure the proxy forwards `set-cookie` headers specifically for cart endpoints and *always* appends a trailing slash to the target URL.
 
 ```typescript
+// ✅ Ensure trailing slash (in route.ts)
+const pathString = path.join("/");
+const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL);
+
 // ✅ Allow cart_id cookie to pass through
 if (key.toLowerCase() === "set-cookie") {
   const cookies = value.split(",");
@@ -410,8 +408,6 @@ if (key.toLowerCase() === "set-cookie") {
   if (cartCookie) {
     response.headers.set("set-cookie", cartCookie);
   }
-} else if (key.toLowerCase() !== "content-encoding") {
-  response.headers.set(key, value);
 }
 ```
 
@@ -483,19 +479,23 @@ except Product.DoesNotExist:
 # ... process product
 ```
 
-### API Path Conflicts
+### API Path Conflicts & Security
 
-**Symptoms:** Django Ninja returns 404 for valid endpoints
+**Symptoms:** Django Ninja returns 404 for valid endpoints; Security audit flags missing headers.
 
-**Root Cause:** Duplicate path in router registration
-
-**Fix:** Use relative paths in router endpoints:
+**Fix (Path Conflicts):** Use relative paths in router endpoints:
 ```python
-# ❌ BAD: Absolute path in router
-@router.get("/products/{slug}/")
-
 # ✅ GOOD: Relative path in router (mounted at /products/)
 @router.get("/{slug}/")
+```
+
+**Fix (Security Headers):** Configure Django for production:
+```python
+# chayuan/settings/production.py
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = 'DENY'
+SECURE_SSL_REDIRECT = True
 ```
 
 ### Product Detail Page 404
@@ -642,10 +642,10 @@ HKEY: cart:abc-123
 |---------|------|-------------|
 | API Router | `backend/api_registry.py` | Central router registration (eager import) |
 | Auth Logic | `backend/apps/core/authentication.py` | JWT cookie handling & AnonymousUser logic |
-| Cart API | `backend/apps/api/v1/cart.py` | Cookie-aware cart endpoints (300+ lines) |
+| Cart API | `backend/apps/api/v1/cart.py` | Cookie-aware cart endpoints (320+ lines) |
 | Cart Tests | `backend/apps/api/tests/test_cart_cookie.py` | TDD tests for cookie persistence (120 lines) |
-| Curation | `backend/apps/commerce/curation.py` | 60/30/10 scoring algorithm |
-| Cart Svc | `backend/apps/commerce/cart.py` | Redis cart service (418 lines) |
+| Register | `frontend/app/auth/register/page.tsx` | Password complexity & PDPA consent (637 lines) |
+| Cart Svc | `backend/apps/commerce/cart.py` | Redis cart service (419 lines) |
 | Stripe SG | `backend/apps/commerce/stripe_sg.py` | Singapore Stripe integration |
 | Theme | `frontend/app/globals.css` | Tailwind v4 theme (349 lines) |
 | API Fetcher | `frontend/lib/auth-fetch.ts` | BFF wrapper (148 lines) |
@@ -665,6 +665,7 @@ HKEY: cart:abc-123
 8. **Never** register routers in `AppConfig.ready()`. Use eager registration in `api_registry.py`.
 9. **Never** use absolute paths in Django Ninja router endpoints. Use relative paths.
 10. **Never** skip `await` on Next.js 15+ params.
+11. **Never** wrap Next.js `<Link>` inside `<motion.div>`. Use `motion.create(Link)`.
 
 ---
 
