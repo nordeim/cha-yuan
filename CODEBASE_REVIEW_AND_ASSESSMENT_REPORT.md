@@ -1,11 +1,12 @@
 # CHA YUAN (茶源) - Codebase Review & Assessment Report
 
-**Report Generated:** 2026-04-22  
-**Reviewer:** OpenCode AI Agent (Code Review & Audit System)  
-**Project Phase:** 8 (Testing & Deployment)  
-**Scope:** Full-stack audit (Django 6 + Next.js 16)  
-**Report Version:** 2.0.0  
+**Report Generated:** 2026-04-23
+**Reviewer:** OpenCode AI Agent (Code Review & Audit System)
+**Project Phase:** 8 (Testing & Deployment)
+**Scope:** Full-stack audit (Django 6 + Next.js 16)
+**Report Version:** 3.0.0
 **Audit Mode:** Deep (Production-Release Readiness)
+**Previous Version:** 2.0.0 (2026-04-22)
 
 ---
 
@@ -570,8 +571,408 @@ cd frontend && npm test
 
 ---
 
+## Appendix C: Comprehensive Architecture Deep Dive
+
+### C.1 Frontend Architecture Details
+
+#### Package.json Structure Analysis
+
+```json
+{
+  "name": "cha-yuan-frontend",
+  "version": "1.0.0",
+  "private": true,
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=10.0.0"
+  }
+}
+```
+
+**Key Dependencies Analysis:**
+
+| Category | Package | Version | Purpose |
+|----------|---------|---------|---------|
+| Framework | next | ^16.2.3 | App Router, Server Components, Turbopack |
+| React | react | ^19.2.5 | Concurrent features, Server Actions |
+| React DOM | react-dom | ^19.2.5 | DOM rendering |
+| Styling | tailwindcss | ^4.2.2 | CSS-first theming, OKLCH colors |
+| PostCSS | @tailwindcss/postcss | ^4.2.2 | CSS processing |
+| Animation | framer-motion | ^12.38.0 | Micro-interactions, useReducedMotion |
+| State | @tanstack/react-query | ^5.99.0 | Server state management |
+| State | zustand | ^5.0.12 | Lightweight client state |
+| UI Primitives | @radix-ui/* | ^1.x | Accessible components |
+| Icons | lucide-react | ^1.8.0 | Icon library |
+| Forms | zod | ^4.3.6 | Schema validation |
+| Content | react-markdown | ^10.1.0 | Markdown rendering |
+| Toast | sonner | ^2.0.7 | Notifications |
+
+**Dev Dependencies Analysis:**
+
+| Category | Package | Purpose |
+|----------|---------|---------|
+| Testing | @testing-library/* | React Testing Library suite |
+| Testing | vitest | Modern test runner |
+| Testing | @vitest/coverage-v8 | Coverage reporting |
+| Testing | playwright | E2E testing |
+| Testing | msw | Mock Service Worker |
+| Types | @types/node, @types/react | TypeScript definitions |
+| Build | typescript | ^6.0.2 |
+| Build | vite | ^8.0.8 |
+| Build | postcss | ^8.5.9 |
+
+#### TypeScript Configuration (tsconfig.json)
+
+```json
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["dom", "dom.iterable", "ESNext"],
+    "strict": true,
+    "noEmit": true,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "jsx": "react-jsx",
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"]
+    },
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "exactOptionalPropertyTypes": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedIndexedAccess": true
+  }
+}
+```
+
+**Key Configuration Strengths:**
+- ✅ `strict: true` - Full strict mode enabled
+- ✅ `exactOptionalPropertyTypes: true` - Precise optional typing
+- ✅ `noUncheckedIndexedAccess: true` - Prevents unsafe index access
+- ✅ `paths` configured for `@/*` imports
+- ✅ `moduleResolution: "bundler"` - Modern resolution strategy
+
+#### BFF Proxy Implementation Details
+
+**File:** `frontend/app/api/proxy/[...path]/route.ts`
+
+```typescript
+// Key implementation details:
+// 1. Next.js 15+ async params pattern
+const { path } = await context.params; // Line 28
+
+// 2. Trailing slash enforcement for Django Ninja
+const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL); // Line 41
+
+// 3. Secure header forwarding
+const headers: HeadersInit = {
+  "Content-Type": "application/json",
+  Accept: "application/json",
+  "X-Request-ID": crypto.randomUUID(),
+  "X-SG-Timezone": "Asia/Singapore",
+  "Accept-Language": "en-SG",
+};
+
+// 4. Cookie handling for cart persistence
+const cookieHeader = clientHeaders.get("cookie");
+if (cookieHeader) {
+  headers["Cookie"] = cookieHeader;
+}
+
+// 5. Token refresh on 401
+if (backendResponse.status === 401 && accessToken) {
+  const refreshed = await tryRefreshToken();
+  if (refreshed) {
+    return retryRequest(request, context);
+  }
+}
+```
+
+#### Auth Fetch Implementation
+
+**File:** `frontend/lib/auth-fetch.ts`
+
+```typescript
+// Server-side vs Client-side detection
+const isServer = typeof window === "undefined";
+
+// Server-side: Direct backend call with cookie extraction
+if (isServer) {
+  return serverFetch(url, fetchOptions, skipAuth);
+} else {
+  // Client-side: BFF proxy route
+  return clientFetch(url, fetchOptions, skipAuth);
+}
+
+// Cookie extraction on server
+const { cookies } = await import("next/headers");
+const cookieStore = await cookies();
+const token = cookieStore.get("access_token")?.value;
+```
+
+### C.2 Backend Architecture Details
+
+#### Models Structure
+
+**File:** `backend/apps/core/models.py`
+
+| Model | Fields | Purpose |
+|-------|--------|---------|
+| User | email, first_name, last_name, phone, postal_code, pdpa_consent_at, pdpa_consent_version | Custom user with SG validation |
+| Address | user, recipient_name, block_street, unit, postal_code, is_default | Singapore address format |
+
+**Key Validations:**
+- Phone: `^\+65\s?\d{8}$` (Singapore format)
+- Postal Code: `^\d{6}$` (6 digits)
+
+**File:** `backend/apps/commerce/models.py`
+
+| Model | Key Fields | Purpose |
+|-------|------------|---------|
+| Origin | name, slug, region, description | Tea origin regions |
+| TeaCategory | name, slug, fermentation_level, brewing_temp_celsius, brewing_time_seconds | Tea categories with brewing guides |
+| Product | name, slug, price_sgd, gst_inclusive, stock, origin, category, harvest_season, harvest_year, weight_grams | Tea products with GST pricing |
+| Subscription | user, status, plan, price_sgd, next_billing_date, stripe_subscription_id | Monthly tea subscriptions |
+| SubscriptionShipment | subscription, products, status, tracking_number, curation_type | Individual subscription shipments |
+
+**GST Calculation:**
+```python
+GST_RATE = Decimal("0.09")
+
+def get_price_with_gst(self):
+    if self.gst_inclusive:
+        return self.price_sgd
+    total = self.price_sgd * (Decimal("1") + GST_RATE)
+    return total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+```
+
+**File:** `backend/apps/content/models.py`
+
+| Model | Key Fields | Purpose |
+|-------|------------|---------|
+| ArticleCategory | name, slug, description, color, order | Article categorization |
+| Article | title, slug, content, excerpt, category, featured_image, published_at, reading_time_minutes | Markdown articles |
+| QuizQuestion | question_text, order, is_required | Quiz questions |
+| QuizChoice | question, choice_text, preference_weights | Quiz answers with weights |
+| UserPreference | user, preferences, quiz_completed_at | User tea preferences |
+
+#### Authentication System
+
+**File:** `backend/apps/core/authentication.py`
+
+```python
+class JWTAuth:
+    """JWT Authentication class for Django Ninja."""
+
+    def __init__(self, required=True):
+        self.required = required
+
+    def __call__(self, request):
+        token = request.COOKIES.get("access_token")
+        if not token:
+            if self.required:
+                raise HttpError(401, "Authentication required")
+            # CRITICAL: Return AnonymousUser for optional auth
+            request.auth = AnonymousUser()
+            return AnonymousUser()
+```
+
+**Cookie Settings:**
+```python
+cookie_settings = {
+    "httponly": True,
+    "secure": not settings.DEBUG,
+    "samesite": "Lax",
+    "domain": domain or ("localhost" if settings.DEBUG else ".cha-yuan.sg"),
+}
+
+# Access token: 15 minutes
+response.set_cookie("access_token", tokens["access_token"], max_age=900, **cookie_settings)
+
+# Refresh token: 7 days, path-restricted
+response.set_cookie("refresh_token", tokens["refresh_token"],
+    max_age=604800,
+    path="/api/v1/auth/refresh",
+    **cookie_settings
+)
+```
+
+#### Cart Service
+
+**File:** `backend/apps/commerce/cart.py` (419 lines)
+
+```python
+# Redis configuration for carts
+redis_client = redis.Redis(
+    host=getattr(settings, "REDIS_HOST", "localhost"),
+    port=getattr(settings, "REDIS_PORT", 6379),
+    db=1,  # Cart database
+    decode_responses=True,
+    socket_connect_timeout=5,
+    socket_timeout=5,
+)
+
+# 30-day TTL
+CART_TTL = timedelta(days=30)
+
+# Quantity limits
+MIN_QUANTITY = 1
+MAX_QUANTITY = 99
+```
+
+**Key Functions:**
+- `get_cart_id(request)` - Get/create cart UUID from cookies
+- `add_to_cart(cart_id, product_id, quantity)` - Add item with validation
+- `validate_quantity(quantity)` - Check 1-99 range
+- `validate_stock(product_id, quantity)` - Check product availability
+
+#### Curation Algorithm
+
+**File:** `backend/apps/commerce/curation.py` (294 lines)
+
+```python
+def score_products(products, preferences, current_season):
+    """
+    Scoring Algorithm:
+    - Base score: 1.0
+    - Category preference: +0.6 * (preference / 100) [60% weight]
+    - Season match: +0.3 [30% weight]
+    - New arrival: +0.3 bonus
+    - Stock level: +0.1 * (stock / 10, max 1.0) [10% weight]
+    """
+    scored = []
+    for product in products:
+        score = 1.0
+        # Category preference (60%)
+        if category_slug in preferences:
+            score += 0.6 * (preferences[category_slug] / 100.0)
+        # Season match (30%)
+        if product.harvest_season == current_season:
+            score += 0.3
+        # New arrival bonus
+        if product.is_new_arrival:
+            score += 0.3
+        # Stock level (10%)
+        score += min(1.0, product.stock / 10.0) * 0.1
+        scored.append((product, score))
+    return sorted(scored, key=lambda x: (-x[1], x[0].name))
+```
+
+**Singapore Season Detection:**
+```python
+def get_current_season_sg():
+    sg_now = datetime.now(timezone("Asia/Singapore"))
+    month = sg_now.month
+    if 3 <= month <= 5: return "spring"
+    elif 6 <= month <= 8: return "summer"
+    elif 9 <= month <= 11: return "autumn"
+    else: return "winter"
+```
+
+#### API Registry
+
+**File:** `backend/api_registry.py`
+
+```python
+# Eager router registration at import time
+api = NinjaAPI(
+    title="CHA YUAN API",
+    version="1.0.0",
+    description="Premium Tea E-Commerce API for Singapore",
+    docs_url="/docs/",
+    openapi_url="/openapi.json",
+    auth=None,  # Each endpoint specifies auth
+)
+
+# Router registration (order matters)
+api.add_router("/auth/", auth_router, tags=["auth"])
+api.add_router("/products/", products_router, tags=["products"])
+api.add_router("/cart/", cart_router, tags=["cart"])
+api.add_router("/checkout/", checkout_router, tags=["checkout"])
+api.add_router("/content/", content_router, tags=["content"])
+api.add_router("/quiz/", quiz_router, tags=["quiz"])
+api.add_router("/subscriptions/", subscriptions_router, tags=["subscriptions"])
+```
+
+### C.3 Design System
+
+**File:** `frontend/app/globals.css` (349 lines)
+
+**Color Palette:**
+```css
+@theme {
+  /* Tea Colors */
+  --color-tea-50: #f4f7f1;
+  --color-tea-500: #5c8a4d;
+  --color-tea-600: #4a7040;
+  --color-tea-900: #2a3d26;
+
+  /* Ivory Colors */
+  --color-ivory-50: #fdfbf7;
+  --color-ivory-100: #faf6ee;
+  --color-ivory-200: #f5f0e8;
+
+  /* Terra Colors */
+  --color-terra-400: #c4724b;
+  --color-terra-500: #b5613f;
+
+  /* Bark Colors */
+  --color-bark-700: #4a3728;
+  --color-bark-800: #3d2b1f;
+  --color-bark-900: #2a1d14;
+
+  /* Gold Colors */
+  --color-gold-300: #d4b96a;
+  --color-gold-500: #b8944d;
+}
+```
+
+**Typography:**
+```css
+--font-display: "Playfair Display", "Noto Serif SC", Georgia, serif;
+--font-sans: "Inter", system-ui, -apple-system, sans-serif;
+--font-serif: "Noto Serif", Georgia, serif;
+--font-chinese: "Noto Serif SC", serif;
+```
+
+**Animations:**
+```css
+/* fadeInUp - Content entrance */
+--animate-fadeInUp: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+/* slideInLeft - From left */
+--animate-slideInLeft: slideInLeft 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+
+/* leafFloat - Floating decoration */
+--animate-leafFloat: leafFloat 4s ease-in-out infinite;
+
+/* steamRise - Steam animation */
+--animate-steamRise: steamRise 2.5s ease-in-out infinite;
+```
+
+### C.4 AGENT_BRIEF.md Validation Matrix
+
+| AGENT_BRIEF.md Claim | File:Line | Status | Notes |
+|---------------------|-----------|--------|-------|
+| "BFF at `frontend/app/api/proxy/[...path]/route.ts`" | route.ts:1 | ✅ **VERIFIED** | ALL handler exports, 257 lines |
+| "Centralized API Registry in `backend/api_registry.py`" | api_registry.py:1 | ✅ **VERIFIED** | 64 lines, eager registration |
+| "Redis cart with 30-day TTL" | cart.py:39-40 | ✅ **VERIFIED** | CART_TTL = timedelta(days=30) |
+| "Django Ninja Auth Truthiness" | authentication.py:163-164 | ✅ **VERIFIED** | Returns AnonymousUser() |
+| "Next.js 15+ Async Params" | route.ts:28 | ✅ **VERIFIED** | await context.params |
+| "Tailwind CSS v4 CSS-First" | globals.css:1 | ✅ **VERIFIED** | @import "tailwindcss", @theme |
+| "Cart Cookie Pattern" | cart.py:various | ✅ **VERIFIED** | get_cart_id_from_request returns tuple |
+| "GST 9% Rate" | base.py:113 | ✅ **VERIFIED** | GST_RATE = Decimal("0.09") |
+| "SG Phone Validation" | models.py:42-44 | ✅ **VERIFIED** | ^\+65\s?\d{8}$ |
+| "SG Postal Validation" | models.py:37-39 | ✅ **VERIFIED** | ^\d{6}$ |
+| "Curation 60/30/10" | curation.py:98-147 | ✅ **VERIFIED** | score_products with weights |
+| "HttpOnly Cookies" | authentication.py:88-125 | ✅ **VERIFIED** | httponly: true |
+
+---
+
 *Report generated by code-review-and-audit skill*
 *Framework: Meticulous Approach - Deep Audit Mode*
-*Last updated: 2026-04-22*
+*Last updated: 2026-04-23*
 *Status: Production-Ready with Conditions*
-*Audit ID: deep-audit-2026-04-22*
+*Audit ID: deep-audit-2026-04-23*

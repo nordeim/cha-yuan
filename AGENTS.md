@@ -353,3 +353,33 @@ const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL); // Append trai
 - ✅ GST 9% calculation & inclusive pricing display
 - ✅ Singapore address/phone validation + PDPA consent tracking
 
+---
+
+## 📊 Codebase Metrics
+
+| Metric | Value | Status |
+|--------|-------|--------|
+| **Backend Test Coverage** | 30.76% | ⚠️ Below 50% target |
+| **Frontend Tests** | 78/78 passing | ✅ All passing |
+| **TypeScript** | 0 errors (strict mode) | ✅ Perfect |
+| **Security** | HttpOnly cookies ✅ | ⚠️ Headers need config |
+| **Lines of Code** | ~15,000+ | Backend + Frontend |
+| **Last Audit** | 2026-04-23 | See CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md |
+
+---
+
+## 🔗 Important File References
+
+| Purpose | File Path | Lines |
+|---------|-----------|-------|
+| API Registry | `backend/api_registry.py` | 64 |
+| Cart Service | `backend/apps/commerce/cart.py` | 419 |
+| Curation Engine | `backend/apps/commerce/curation.py` | 294 |
+| Authentication | `backend/apps/core/authentication.py` | 190 |
+| BFF Proxy | `frontend/app/api/proxy/[...path]/route.ts` | 257 |
+| Auth Fetch | `frontend/lib/auth-fetch.ts` | 148 |
+| Design System | `frontend/app/globals.css` | 349 |
+| User Model | `backend/apps/core/models.py` | 133 |
+| Product Model | `backend/apps/commerce/models.py` | 343 |
+| Quiz Models | `backend/apps/content/models.py` | 255 |
+
