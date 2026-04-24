@@ -366,6 +366,7 @@ const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL); // Append trai
 | **Security** | HttpOnly cookies ✅ | 🔴 Infra needs hardening (see audit report) |
 | **Lines of Code** | ~29,000 | 11,790 backend + 16,996 frontend |
 | **Last Audit** | 2026-04-24 | See CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md |
+| **Production Settings** | production.py created | ✅ Ready for deployment |
 
 ---
 
@@ -383,4 +384,6 @@ const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL); // Append trai
 | User Model | `backend/apps/core/models.py` | 133 |
 | Product Model | `backend/apps/commerce/models.py` | 343 |
 | Quiz Models | `backend/apps/content/models.py` | 255 |
+| Order Model | `backend/apps/commerce/models.py` | ~500 |
+| Production Settings | `backend/chayuan/settings/production.py` | ~400 |
 

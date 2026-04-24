@@ -24,6 +24,53 @@ Now let me check the existing test files and the existing migrations for the com
 ✱ Glob "backend/apps/commerce/migrations/*.py" (3 matches)
 ✱ Glob "backend/apps/commerce/tests/*.py" (7 matches)
 
+I have the full picture. Let me analyze the findings:
+Investigation Summary
+Root Cause of Missing Order Model:
+1. Tests expect an Order model - In test_stripe_webhook.py, lines 127, 141, 161, 170, 182, 196, 241, 330, 354 all mock Order.objects.create or Order.objects.filter. The tests were written before the model was implemented (TDD approach).
+2. stripe_sg.py references Order - Lines 247-251, 304-326 attempt to use Order.objects.create() and Order.objects.filter(), but this will fail at runtime with NameError or ImportError since the model doesn't exist.
+3. The webhook handler tries to create Order records - The handle_payment_success() function at lines 304-326 in stripe_sg.py attempts to persist order data to an Order model that doesn't exist.
+4. No Order model in models.py - Only these models exist:
+   - Origin, TeaCategory, Product, Subscription, SubscriptionShipment
+5. No Order admin - commerce/admin.py only registers Origin, TeaCategory, Product, Subscription, SubscriptionShipment.
+The Actual Functional Gap
+When checkout.session.completed webhook fires:
+1. Payment succeeds in Stripe
+2. Webhook handler handle_payment_success() is called
+3. It attempts to create an Order object
+4. CRASH - NameError: name 'Order' is not defined (or ImportError if they try to import it)
+5. Purchase data vanishes - Without Order persistence, users can't track their orders, access order history, or receive fulfillment updates. Support teams lose visibility into completed transactions, and refunds become impossible since there's no order record to reference.
+Now I'll develop the Order and OrderItem models with the necessary fields derived from the webhook
+Now I have the complete picture. Let me synthesize my findings and present the Root Cause Analysis:
+---
+🔍 ROOT CAUSE ANALYSIS — Missing Order Model
+The Core Problem
+The webhook handler handle_payment_success() in stripe_sg.py (lines 247-326) attempts to create an Order, but the Order model does not exist. This means:
+Event	Current Behavior	Expected Behavior
+Stripe payment succeeds	Webhook crashes with ImportError or NameError	Order record created, user sees order confirmation
+Checkout completes	Cart cleared, but no purchase record	User can view order history
+Customer support inquiry	No order data available	Full order details available
+Refund request	Impossible (no order to refund against)	Process refund via Stripe, update order status
+Evidence from Code
+1. Tests expect Order (TDD was started but not completed):
+# test_stripe_webhook.py lines 127, 141, 161, 170, 182, 196, 241, 330, 354
+with patch("commerce.stripe_sg.Order.objects.create") as mock_create:
+    # Tests were written expecting Order model to exist
+2. stripe_sg.py references Order but can't import it:
+# Line 247: WRONG import path (should be apps.commerce.models)
+from commerce.models import Order  # ModuleNotFoundError
+# Lines 304-326: Attempts to create Order
+order = Order.objects.create(**order_data)  # Would crash
+3. No Order model in commerce/models.py:
+- Only 5 models exist: Origin, TeaCategory, Product, Subscription, SubscriptionShipment
+4. No Order admin in commerce/admin.py:
+- Only registers: Origin, TeaCategory, Product, Subscription, SubscriptionShipment
+---
+📋 REMEDIATION PLAN
+Phase 2: Design Order/OrderItem Models
+Based on the webhook handler's expected usage (lines 304-326 in stripe_sg.py)n\n#### 2. Admin Configuration\n\n
+# Wrote backend/apps/commerce/order_design.md
+
 Thinking: Now Phase 8 — Run the tests to verify GREEN
 # Run TDD GREEN phase - expect tests to pass now
 $ cd /home/project/tea-culture/cha-yuan/backend && PYTHONPATH=/home/project/tea-culture/cha-yuan/backend:$PYTHONPATH DJANGO_SETTINGS_MODULE=chayuan.settings.test python -m pytest apps/commerce/tests/test_models_order.py -v --tb=short 2>&1 | head -60
