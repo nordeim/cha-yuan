@@ -92,6 +92,10 @@ awesome meticulous job so far. please keep up the good work. when I click on 'Cr
 
 ---
 
+awesome meticulous job so far. please keep up the good work. now, please meticulously review the codebase to systematically evaluate how best to implement the 'CSRF protection via explicit X-CSRFToken header forwarding for defense-in-depth', then create a comprehensive phased implementation plan with ToDo list. review and validate the implementation against the actual codebase for correct alignment.
+
+---
+
 Awesome meticulous review, analysis and planning. Please keep up the good work in your rigorous and meticulous approach to planning and execution. Now, please meticulously review and analyze @Design_Choices_Review_1.md and @Design_Choices_Review_2.md , critically and systematically validate the findings and claims against the actual codebase before meticulously planning to create your own assessment report based on your validated findings and verfication of the current codebase. create your comprehensive critical analysis assessment report as a new markdown file `Validated_Design_Choices_Review.md`.
 
 #Task:
@@ -129,6 +133,10 @@ Then start by loading the appropriate skills and then exploring the codebase. Le
 - Skill "code-review-and-audit"
 - Skill "analyzing-projects"
 - Skill "plan-writing"
+
+---
+
+awesome meticulous job on your review, analysis and planning. please keep up the good work. yes, please meticulously plan to create a detailed remediation plan with a ToDo list to re-validate carefully and systematically the below critical functionality gap/issue to identify the actual root cause and the optimal fix while preserving the overall functionalities of the app, then plan to apply the validated optimal fixes. review and validate your remediation plan against the codebase again to ensure correct alignment before proceeding to execute it meticulously. remember to use the Test-Driven Development (TDD) approach to make the changes.
 
 ---
 

@@ -111,7 +111,7 @@ cha-yuan/
 │   ├── api_registry.py          # Centralized router registration (CRITICAL)
 │   ├── apps/
 │   │   ├── api/v1/              # Django Ninja routers (products, cart, checkout, etc.)
-│   │   ├── commerce/            # Product, Order, Subscription models + curation.py
+│ │ ├── commerce/ # Product, Origin, TeaCategory, Subscription models + curation.py
 │   │   ├── content/             # Quiz, Articles, UserPreference
 │   │   └── core/                # User model, JWT auth, SG validators
 │   └── chayuan/settings/        # Environment-specific configs
@@ -359,12 +359,13 @@ const targetUrl = new URL(`/api/v1/${pathString}/`, BACKEND_URL); // Append trai
 
 | Metric | Value | Status |
 |--------|-------|--------|
-| **Backend Test Coverage** | 30.76% | ⚠️ Below 50% target |
+| **Backend Test Coverage** | 29.41% | 🔴 Below 50% target |
+| **Backend Tests** | 165 passed / 228 failed / 124 errors | 🔴 Only 32% pass rate |
 | **Frontend Tests** | 78/78 passing | ✅ All passing |
 | **TypeScript** | 0 errors (strict mode) | ✅ Perfect |
-| **Security** | HttpOnly cookies ✅ | ⚠️ Headers need config |
-| **Lines of Code** | ~15,000+ | Backend + Frontend |
-| **Last Audit** | 2026-04-23 | See CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md |
+| **Security** | HttpOnly cookies ✅ | 🔴 Infra needs hardening (see audit report) |
+| **Lines of Code** | ~29,000 | 11,790 backend + 16,996 frontend |
+| **Last Audit** | 2026-04-24 | See CODEBASE_REVIEW_AND_ASSESSMENT_REPORT.md |
 
 ---
 
