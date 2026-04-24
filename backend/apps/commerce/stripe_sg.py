@@ -244,7 +244,7 @@ def handle_payment_success(event: dict) -> dict[str, Any]:
     metadata = payment_intent.get("metadata", {})
 
     # Check for duplicate (idempotency)
-    from commerce.models import Order
+    from apps.commerce.models import Order, OrderItem
 
     if Order.objects.filter(stripe_payment_intent_id=payment_intent_id).exists():
         # Return existing order
@@ -274,13 +274,12 @@ def handle_payment_success(event: dict) -> dict[str, Any]:
 
     # Get shipping address
     shipping = payment_intent.get("shipping", {})
-    shipping_address = {
-        "name": shipping.get("name", ""),
-        "line1": shipping.get("address", {}).get("line1", ""),
-        "line2": shipping.get("address", {}).get("line2", ""),
-        "postal_code": shipping.get("address", {}).get("postal_code", ""),
-        "country": shipping.get("address", {}).get("country", "SG"),
-    }
+    shipping_name = shipping.get("name", "")
+    shipping_address = shipping.get("address", {})
+    shipping_line1 = shipping_address.get("line1", "")
+    shipping_line2 = shipping_address.get("line2", "")
+    shipping_postal = shipping_address.get("postal_code", "")
+    shipping_country = shipping_address.get("country", "SG")
 
     # Get payment method
     charges = payment_intent.get("charges", {}).get("data", [])
@@ -301,29 +300,72 @@ def handle_payment_success(event: dict) -> dict[str, Any]:
     if charges:
         receipt_url = charges[0].get("receipt_url")
 
-    # Create order
-    order_data = {
-        "total_sgd": total_sgd,
-        "gst_amount_sgd": gst_amount,
-        "stripe_payment_intent_id": payment_intent_id,
-        "payment_method": payment_method,
-        "receipt_url": receipt_url,
-        "shipping_name": shipping_address["name"],
-        "shipping_address_line1": shipping_address["line1"],
-        "shipping_address_line2": shipping_address["line2"],
-        "shipping_postal_code": shipping_address["postal_code"],
-        "status": "paid",
-    }
+    # Get customer email
+    receipt_email = payment_intent.get("receipt_email", "")
 
+    # Get user if available
+    user = None
     if user_id:
         from apps.core.models import User
-
         try:
-            order_data["user"] = User.objects.get(id=int(user_id))
-        except User.DoesNotExist:
+            user = User.objects.get(id=int(user_id))
+        except (User.DoesNotExist, ValueError):
             pass
 
-    order = Order.objects.create(**order_data)
+    # Get cart items for order creation
+    cart_items = []
+    if cart_id:
+        cart_items = get_cart_items(cart_id)
+
+    # Calculate subtotal from cart items
+    subtotal_sgd = base_amount
+
+    # Create order
+    order = Order.objects.create(
+        user=user,
+        customer_email=receipt_email or (user.email if user else ""),
+        customer_name=user.get_full_name() if user else shipping_name,
+        customer_phone=user.phone if user else "",
+        shipping_name=shipping_name,
+        shipping_block_street=shipping_line1,
+        shipping_unit=shipping_line2,
+        shipping_postal_code=shipping_postal,
+        shipping_country=shipping_country,
+        subtotal_sgd=subtotal_sgd,
+        gst_amount_sgd=gst_amount,
+        total_sgd=total_sgd,
+        stripe_payment_intent_id=payment_intent_id,
+        stripe_receipt_url=receipt_url or "",
+        payment_method=payment_method,
+        cart_id=cart_id or "",
+        status="paid",
+    )
+
+    # Create order items from cart
+    if cart_items:
+        for item in cart_items:
+            OrderItem.objects.create(
+                order=order,
+                product_id=item["product_id"],
+                product_name=item["name"],
+                product_slug=item["slug"],
+                product_weight_grams=item["weight_grams"],
+                product_image=item.get("image") or "",
+                unit_price_sgd=Decimal(str(item["price_with_gst"])),
+                quantity=item["quantity"],
+                subtotal_sgd=Decimal(str(item["subtotal"])),
+            )
+
+            # Decrement product stock
+            try:
+                from apps.commerce.models import Product
+                product = Product.objects.get(id=item["product_id"])
+                product.stock -= item["quantity"]
+                if product.stock < 0:
+                    product.stock = 0
+                product.save()
+            except Product.DoesNotExist:
+                pass
 
     # Clear cart if cart_id provided
     if cart_id:

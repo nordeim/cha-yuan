@@ -341,3 +341,162 @@ class SubscriptionShipment(models.Model):
 
     def __str__(self):
         return f"Shipment {self.id} for {self.subscription.user.email}"
+
+
+class Order(models.Model):
+    """
+    Customer purchase order.
+    Created when Stripe payment_intent.succeeded webhook fires.
+    """
+
+    STATUS_CHOICES = [
+        ("pending", "Pending Payment"),
+        ("paid", "Paid"),
+        ("processing", "Processing"),
+        ("shipped", "Shipped"),
+        ("delivered", "Delivered"),
+        ("cancelled", "Cancelled"),
+        ("refunded", "Refunded"),
+    ]
+
+    # Order identification
+    order_number = models.CharField(max_length=20, unique=True, db_index=True)
+
+    # Status workflow
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending",
+    )
+
+    # Customer linkage
+    user = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="orders",
+    )
+    # For guest checkout, user is null; we capture email below
+    customer_email = models.EmailField()
+    customer_name = models.CharField(max_length=255, blank=True)
+    customer_phone = models.CharField(max_length=20, blank=True)
+
+    # Singapore address (copied at time of purchase)
+    shipping_name = models.CharField(max_length=255)
+    shipping_block_street = models.CharField(max_length=255)
+    shipping_unit = models.CharField(max_length=50, blank=True)
+    shipping_postal_code = models.CharField(max_length=6)
+    shipping_country = models.CharField(max_length=2, default="SG")
+
+    # Pricing (SGD)
+    subtotal_sgd = models.DecimalField(max_digits=10, decimal_places=2)
+    gst_amount_sgd = models.DecimalField(max_digits=10, decimal_places=2)
+    total_sgd = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Payment
+    stripe_payment_intent_id = models.CharField(
+        max_length=255,
+        unique=True,
+        db_index=True,
+    )
+    stripe_receipt_url = models.URLField(blank=True)
+    payment_method = models.CharField(max_length=100, blank=True)
+    # Examples: "visa ending in 4242", "grabpay", "paynow"
+
+    # Fulfillment
+    tracking_number = models.CharField(max_length=255, blank=True)
+    shipped_at = models.DateTimeField(null=True, blank=True)
+    delivered_at = models.DateTimeField(null=True, blank=True)
+
+    # Metadata
+    cart_id = models.CharField(max_length=255, blank=True, help_text="Original cart ID")
+    notes = models.TextField(blank=True, help_text="Customer or staff notes")
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "orders"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"{self.order_number} - {self.customer_email}"
+
+    def generate_order_number(self):
+        """Generate unique order number: CY-YYYYMMDD-XXX"""
+        from datetime import datetime
+        today = datetime.now()
+        prefix = f"CY-{today.strftime('%Y%m%d')}"
+
+        # Find next sequence number for today
+        existing = Order.objects.filter(order_number__startswith=prefix).count()
+        sequence = existing + 1
+        return f"{prefix}-{sequence:03d}"
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            self.order_number = self.generate_order_number()
+        super().save(*args, **kwargs)
+
+
+class OrderItem(models.Model):
+    """
+    Individual line item in an order.
+    Captures product state at time of purchase (prices frozen).
+    """
+
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name="items",
+    )
+
+    # Product reference (nullable in case product is deleted later)
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="order_items",
+    )
+
+    # Frozen product data (at time of purchase)
+    product_name = models.CharField(max_length=255)
+    product_slug = models.SlugField()
+    product_weight_grams = models.PositiveIntegerField()
+    product_image = models.URLField(blank=True)
+
+    # Pricing (frozen at purchase)
+    unit_price_sgd = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.PositiveIntegerField()
+    subtotal_sgd = models.DecimalField(max_digits=10, decimal_places=2)
+
+    # Fulfillment
+    STATUS_CHOICES = [
+        ("pending", "Pending"),
+        ("preparing", "Preparing"),
+        ("shipped", "Shipped"),
+        ("delivered", "Delivered"),
+        ("returned", "Returned"),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending",
+    )
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = "order_items"
+        ordering = ["created_at"]
+
+    def __str__(self):
+        return f"{self.quantity}x {self.product_name} in {self.order.order_number}"
+
+    def save(self, *args, **kwargs):
+        # Calculate subtotal from unit_price * quantity
+        self.subtotal_sgd = Decimal(str(self.unit_price_sgd)) * self.quantity
+        super().save(*args, **kwargs)

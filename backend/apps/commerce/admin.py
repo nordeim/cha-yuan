@@ -13,6 +13,8 @@ from apps.commerce.models import (
     Product,
     Subscription,
     SubscriptionShipment,
+    Order,
+    OrderItem,
 )
 
 
@@ -235,9 +237,117 @@ class SubscriptionShipmentAdmin(admin.ModelAdmin):
         return qs.select_related("subscription", "subscription__user")
 
 
+class OrderItemInline(admin.TabularInline):
+    """Inline display for order items."""
+    model = OrderItem
+    extra = 0
+    readonly_fields = [
+        "product_name",
+        "product_slug",
+        "quantity",
+        "unit_price_sgd",
+        "subtotal_sgd",
+        "created_at",
+    ]
+    can_delete = False
+    show_change_link = False
+
+
+class OrderAdmin(admin.ModelAdmin):
+    """Admin for customer orders."""
+
+    list_display = [
+        "order_number",
+        "customer_email",
+        "total_sgd",
+        "status",
+        "payment_method",
+        "created_at",
+    ]
+    list_filter = [
+        "status",
+        "payment_method",
+        "created_at",
+        "shipping_country",
+    ]
+    search_fields = [
+        "order_number",
+        "customer_email",
+        "stripe_payment_intent_id",
+        "customer_name",
+    ]
+    readonly_fields = [
+        "order_number",
+        "created_at",
+        "updated_at",
+        "stripe_payment_intent_id",
+        "subtotal_sgd",
+        "gst_amount_sgd",
+        "total_sgd",
+    ]
+    inlines = [OrderItemInline]
+    date_hierarchy = "created_at"
+    list_select_related = ["user"]
+
+    fieldsets = (
+        (
+            "Order Information",
+            {
+                "fields": ("order_number", "status", "created_at", "updated_at"),
+            },
+        ),
+        (
+            "Customer",
+            {
+                "fields": ("user", "customer_email", "customer_name", "customer_phone"),
+            },
+        ),
+        (
+            "Shipping Address",
+            {
+                "fields": (
+                    "shipping_name",
+                    "shipping_block_street",
+                    "shipping_unit",
+                    "shipping_postal_code",
+                    "shipping_country",
+                ),
+            },
+        ),
+        (
+            "Payment",
+            {
+                "fields": (
+                    "stripe_payment_intent_id",
+                    "payment_method",
+                    "stripe_receipt_url",
+                    "subtotal_sgd",
+                    "gst_amount_sgd",
+                    "total_sgd",
+                ),
+            },
+        ),
+        (
+            "Fulfillment",
+            {
+                "fields": ("tracking_number", "shipped_at", "delivered_at"),
+            },
+        ),
+        (
+            "Metadata",
+            {
+                "fields": ("cart_id", "notes"),
+                "classes": ("collapse",),
+            },
+        ),
+    )
+
+
 # Register models
 admin.site.register(Origin, OriginAdmin)
 admin.site.register(TeaCategory, TeaCategoryAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(Subscription, SubscriptionAdmin)
 admin.site.register(SubscriptionShipment, SubscriptionShipmentAdmin)
+admin.site.register(Order, OrderAdmin)
+admin.site.register(OrderItem)
